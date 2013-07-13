@@ -1,0 +1,16 @@
+/bin
+/workspace/.metadata
+
+/workspace/auction/.project
+/workspace/auction/.settings
+/workspace/auction/dbimport/.settings
+/workspace/auction/dbimport/.checkstyle
+/workspace/auction/dbimport/.classpath
+/workspace/auction/dbimport/.project
+/workspace/auction/dbimport/.springBeans
+
+/workspace/auction/meta/.project
+/workspace/auction/meta/.settings
+/workspace/auction/meta/target
+/workspace/auction/meta/.classpath
+/var

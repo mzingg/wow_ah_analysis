@@ -1,6 +1,7 @@
 package ch.mrwolf.wow.dbimport.io;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -17,6 +18,7 @@ import org.springframework.util.StringUtils;
 
 import ch.mrwolf.wow.dbimport.model.AuctionDuration;
 import ch.mrwolf.wow.dbimport.model.AuctionExportRecord;
+import ch.mrwolf.wow.dbimport.model.Faction;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
@@ -44,9 +46,14 @@ public class AuctionExportReader implements ReaderCallback {
   }
 
   public void read() {
+    if (StringUtils.isEmpty(directoryPath)) {
+      log.error("Invalid directory path set.");
+      return;
+    }
+
     try {
       init();
-      processDirectoy();
+      processDirectoy(new File(directoryPath));
     } finally {
       close();
     }
@@ -115,13 +122,7 @@ public class AuctionExportReader implements ReaderCallback {
     return readerCallback != null ? readerCallback.isRecordProcessingEnabled() : true;
   }
 
-  private void processDirectoy() {
-    if (StringUtils.isEmpty(directoryPath)) {
-      log.error("Invalid directory path set.");
-      return;
-    }
-
-    final File directory = new File(directoryPath);
+  private void processDirectoy(final File directory) {
 
     if (!directory.isDirectory() || !directory.canRead()) {
       log.error(String.format("Configured directory path [%s] is not a directory or not readeable.", directoryPath));
@@ -134,6 +135,18 @@ public class AuctionExportReader implements ReaderCallback {
         return fileName.endsWith(EXPORT_FILE_EXTENSION);
       }
     });
+
+    final File[] subDirectories = directory.listFiles(new FileFilter() {
+      @Override
+      public boolean accept(final File file) {
+        return file.canRead() && file.isDirectory();
+      }
+    });
+
+    // Depth first recursion
+    for (File subdirectory : subDirectories) {
+      processDirectoy(subdirectory);
+    }
 
     for (String fileName : fileNames) {
 
@@ -180,35 +193,37 @@ public class AuctionExportReader implements ReaderCallback {
 
           // read realm information
           jp.nextValue();
-          jp.readValueAs(Object.class);
+          final Map<String, Object> realmData = jp.readValueAs(new TypeReference<Map<String, Object>>() {
+          });
 
-          if (!jp.nextFieldName(new SerializedString("alliance"))) {
-            // no alliance entry
-            return;
-          }
+          while (jp.nextToken() != JsonToken.END_OBJECT) {
+            Faction faction = Faction.lookup(jp.getCurrentName());
 
-          if (jp.nextToken() != JsonToken.START_OBJECT) {
-            // alliance is not an object
-            return;
-          }
+            if (jp.nextToken() == JsonToken.START_OBJECT) {
 
-          if (!jp.nextFieldName(new SerializedString("auctions"))) {
-            // no auctions entry
-            return;
-          }
+              if (!jp.nextFieldName(new SerializedString("auctions"))) {
+                // no auctions entry
+                return;
+              }
 
-          if (jp.nextToken() != JsonToken.START_ARRAY) {
-            // auctions is not an object
-            return;
-          }
+              if (jp.nextToken() != JsonToken.START_ARRAY) {
+                // auctions is not an object
+                return;
+              }
 
-          while (jp.nextToken() != JsonToken.END_ARRAY) {
-            final Map<String, Object> recordData = jp.readValueAs(new TypeReference<Map<String, Object>>() {
-            });
+              while (jp.nextToken() != JsonToken.END_ARRAY) {
+                final Map<String, Object> recordData = jp.readValueAs(new TypeReference<Map<String, Object>>() {
+                });
 
-            if (beforeRecord(recordData, snapshotTime, fileMd5Hash)) {
-              final AuctionExportRecord record = createRecord(recordData, snapshotTime, fileMd5Hash);
-              afterRecord(record);
+                if (beforeRecord(recordData, snapshotTime, fileMd5Hash)) {
+                  final AuctionExportRecord record = createRecord(recordData, faction, (String) realmData.get("slug"), snapshotTime, fileMd5Hash);
+                  afterRecord(record);
+                }
+              }
+
+              // Advance end of 'auctions' object
+              jp.nextToken();
+
             }
           }
         }
@@ -220,8 +235,10 @@ public class AuctionExportReader implements ReaderCallback {
     }
   }
 
-  private AuctionExportRecord createRecord(final Map<String, Object> recordData, final Calendar snapshotTime, final String fileMd5Hash) {
+  private AuctionExportRecord createRecord(final Map<String, Object> recordData, final Faction faction, final String realm, final Calendar snapshotTime, final String fileMd5Hash) {
     AuctionExportRecord result = new AuctionExportRecord();
+    result.setFaction(faction);
+    result.setRealm(realm);
     result.setSnapshotTime(snapshotTime);
     result.setSnapshotHash(fileMd5Hash);
 
@@ -277,7 +294,7 @@ public class AuctionExportReader implements ReaderCallback {
     if (recordData.containsKey("timeLeft")) {
       final Object value = recordData.get("timeLeft");
       if (value instanceof String) {
-        result.setTimeLeft(AuctionDuration.lookUp((String) value));
+        result.setTimeLeft(AuctionDuration.lookup((String) value));
       }
     }
 

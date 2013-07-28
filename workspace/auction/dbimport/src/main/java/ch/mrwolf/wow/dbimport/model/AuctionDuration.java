@@ -3,25 +3,43 @@ package ch.mrwolf.wow.dbimport.model;
 import java.util.HashMap;
 import java.util.Map;
 
+import lombok.Getter;
+
 import org.springframework.util.StringUtils;
 
 public enum AuctionDuration {
 
-  SHORT, MEDIUM, LONG, VERY_LONG;
+  VERY_LONG(172800000), // 48h
+  LONG(43200000), // 12h
+  MEDIUM(7200000), // 2h
+  SHORT(1800000); // 30m
 
-  private final static Map<String, AuctionDuration> lookup = new HashMap<String, AuctionDuration>();
+  @Getter
+  private long offsetTime;
+
+  private final static Map<String, AuctionDuration> lookupTable = new HashMap<>();
+
   static {
-    for (AuctionDuration value : values()) {
-      lookup.put(value.name().toLowerCase(), value);
+    for (AuctionDuration duration : values()) {
+      lookupTable.put(duration.name().toLowerCase(), duration);
     }
   }
 
-  public static AuctionDuration lookUp(final String name) {
-    if (!StringUtils.isEmpty(name) && lookup.containsKey(name.toLowerCase())) {
-      return lookup.get(name.toLowerCase());
+  private AuctionDuration(final long offsetTime) {
+    this.offsetTime = offsetTime;
+  }
+
+  public static AuctionDuration lookup(final String key) {
+    if (StringUtils.isEmpty(key)) {
+      return null;
     }
 
-    return null;
+    final String unifiedKey = key.trim().toLowerCase();
+    if (!lookupTable.containsKey(unifiedKey)) {
+      return null;
+    }
+
+    return lookupTable.get(unifiedKey);
   }
 
 }

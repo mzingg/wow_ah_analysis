@@ -9,6 +9,14 @@ public class AuctionExportRecord {
 
   @Getter
   @Setter
+  private String realm;
+
+  @Getter
+  @Setter
+  private Faction faction;
+
+  @Getter
+  @Setter
   private int auctionId;
 
   @Getter
@@ -29,11 +37,11 @@ public class AuctionExportRecord {
 
   @Getter
   @Setter
-  private int bidAmount;
+  private long bidAmount;
 
   @Getter
   @Setter
-  private int buyoutAmount;
+  private long buyoutAmount;
 
   @Getter
   @Setter

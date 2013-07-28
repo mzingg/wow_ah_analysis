@@ -61,7 +61,11 @@ public class AbstractProcessingStateCallback implements ReaderCallback {
 
   @Override
   public boolean beforeFile(final File file, final Calendar snapshotTime, final String snapshotMd5Hash) {
-    return !processedFiles.contains(snapshotMd5Hash);
+    if (processedFiles.contains(snapshotMd5Hash)) {
+      log.info("Skipping file [" + file.getName() + "]");
+      return false;
+    }
+    return true;
   }
 
   @Override

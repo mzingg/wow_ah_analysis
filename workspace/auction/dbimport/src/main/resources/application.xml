@@ -29,7 +29,8 @@
   
   <bean id="postgresReaderCallback" class="ch.mrwolf.wow.dbimport.io.directdb.ProcessingCallback">
     <property name="tableName" value="import.auction_snapshot"/>
-    <property name="batchSize" value="15000"/>  
+    <property name="consolidatedTableName" value="import.consolidated"/>
+    <property name="batchSize" value="15000"/>
     <property name="dataSource"><ref bean="postgresDataSource"/></property>
   </bean>
   

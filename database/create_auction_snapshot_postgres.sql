@@ -1,6 +1,6 @@
 ﻿-- Table: import.auction_snapshot
 
-DROP TABLE import.auction_snapshot;
+-- DROP TABLE import.auction_snapshot;
 
 CREATE TABLE import.auction_snapshot
 (
@@ -47,6 +47,15 @@ CREATE INDEX idx_expected_end
   ON import.auction_snapshot
   USING btree
   (expected_end);
+
+-- Index: import.idx_realm_auction
+
+-- DROP INDEX import.idx_realm_auction;
+
+CREATE INDEX idx_realm_auction
+  ON import.auction_snapshot
+  USING btree
+  (realm COLLATE pg_catalog."default", auction_id);
 
 -- Index: import.idx_timestamp
 

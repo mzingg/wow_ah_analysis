@@ -11,13 +11,12 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Set;
 
-import javax.sql.DataSource;
-
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.apachecommons.CommonsLog;
 
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.RowCallbackHandler;
 
@@ -29,6 +28,13 @@ import ch.mrwolf.wow.dbimport.model.AuctionExportRecord;
 public class ProcessingCallback extends AbstractJdbcProcessingStateCallback {
 
   private final static int DEFAULT_BATCH_SIZE = 15000;
+  private final static String CREATE_TABLE_STATEMENT = "CREATE TABLE %s AS %s";
+  private final static String DROP_TABLE_STATEMENT = "DROP TABLE IF EXISTS %s";
+  private final static String CONSOLIDATED_TABLE_QUERY = "SELECT g.faction, g.realm, g.auction_id, g.item_id, Count(*) AS transactions, MAX(expected_end) AS max_end, MAX(buyout_amount) AS last_buyout, MAX(bid_amount) AS last_bid, MAX(v.snapshot_hash) AS active_hash "
+      + "FROM %s AS g "
+      + "LEFT JOIN "
+      + "(SELECT DISTINCT auction_id, snapshot_hash FROM import.auction_snapshot WHERE timestamp = (SELECT MAX(timestamp) FROM import.auction_snapshot ) AND expected_end >= NOW()) AS v ON (g.auction_id = v.auction_id AND g.snapshot_hash = v.snapshot_hash)"
+      + "GROUP BY g.faction, g.realm, g.auction_id, g.item_id";
 
   @Setter
   @Getter(AccessLevel.PROTECTED)
@@ -40,6 +46,31 @@ public class ProcessingCallback extends AbstractJdbcProcessingStateCallback {
     super();
     this.processingQueue = new LinkedList<AuctionExportRecord>();
     this.batchSize = DEFAULT_BATCH_SIZE;
+  }
+
+  @Override
+  public void init() {
+    super.init();
+    updateProcessedFiles();
+  }
+
+  private void updateProcessedFiles() {
+    log.info("Updating processed files");
+    final long start = System.currentTimeMillis();
+
+    final String sqlStatement = String.format("SELECT DISTINCT snapshot_hash FROM %s", getTableName());
+    getJdbcTemplate().query(sqlStatement, new Object[0], new RowCallbackHandler() {
+
+      @Override
+      public void processRow(final ResultSet rs) throws SQLException {
+        final String md5Hash = rs.getString("snapshot_hash");
+        final Set<String> processedFiles = getProcessedFiles();
+        processedFiles.add(md5Hash);
+      }
+    });
+
+    final long end = System.currentTimeMillis();
+    log.info("Updating took " + (end - start) + "ms");
   }
 
   @Override
@@ -144,28 +175,23 @@ public class ProcessingCallback extends AbstractJdbcProcessingStateCallback {
   }
 
   @Override
-  public void setDataSource(final DataSource dataSource) {
-    super.setDataSource(dataSource);
-    updateProcessedFiles();
+  protected boolean dropConsolidatedTable() {
+    try {
+      getJdbcTemplate().execute(String.format(DROP_TABLE_STATEMENT, getConsolidatedTableName()));
+      return true;
+    } catch (DataAccessException e) {
+      log.error(e.getMessage(), e);
+      return false;
+    }
   }
 
-  private void updateProcessedFiles() {
-    log.info("Updating processed files");
-    final long start = System.currentTimeMillis();
-
-    final String sqlStatement = String.format("SELECT DISTINCT snapshot_hash FROM %s", getTableName());
-    getJdbcTemplate().query(sqlStatement, new Object[0], new RowCallbackHandler() {
-
-      @Override
-      public void processRow(final ResultSet rs) throws SQLException {
-        final String md5Hash = rs.getString("snapshot_hash");
-        final Set<String> processedFiles = getProcessedFiles();
-        processedFiles.add(md5Hash);
-      }
-    });
-
-    final long end = System.currentTimeMillis();
-    log.info("Updating took " + (end - start) + "ms");
+  @Override
+  protected void createConsolidatedTable() {
+    try {
+      getJdbcTemplate().execute(String.format(CREATE_TABLE_STATEMENT, getConsolidatedTableName(), String.format(CONSOLIDATED_TABLE_QUERY, getTableName())));
+    } catch (DataAccessException e) {
+      log.error(e.getMessage(), e);
+    }
   }
 
 }

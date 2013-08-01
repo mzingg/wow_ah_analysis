@@ -81,4 +81,14 @@ public class ProcessingCallback extends AbstractJdbcProcessingStateCallback {
     }
     return jsonDataValue.toString();
   }
+
+  @Override
+  protected boolean dropConsolidatedTable() {
+    return false;
+  }
+
+  @Override
+  protected void createConsolidatedTable() {
+  }
+
 }

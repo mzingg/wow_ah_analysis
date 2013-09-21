@@ -8,6 +8,7 @@
 /workspace/auction/dbimport/.classpath
 /workspace/auction/dbimport/.project
 /workspace/auction/dbimport/.springBeans
+/workspace/auction/dbimport/.pmd
 
 /workspace/auction/meta/.project
 /workspace/auction/meta/.settings

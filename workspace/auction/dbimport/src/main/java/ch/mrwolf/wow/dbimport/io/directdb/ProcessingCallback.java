@@ -25,16 +25,7 @@ public class ProcessingCallback extends AbstractJdbcProcessingStateCallback {
   private final static int DEFAULT_BATCH_SIZE = 5000;
   private final static int DEFAULT_THREAD_COUNT = 8;
 
-  private final static String CREATE_FILELOG_STATEMENT = "INSERT INTO %s (file_hash, file_date, completion_date, record_count) VALUES (?, ?, ?, ?)";
   private final static String SELECT_PROCESSED_FILES_STATEMENT = "SELECT DISTINCT snapshot_hash FROM %s WHERE faction = 99";
-
-  private final static String CREATE_TABLE_STATEMENT = "CREATE TABLE %s AS %s";
-  private final static String DROP_TABLE_STATEMENT = "DROP TABLE IF EXISTS %s";
-  private final static String CONSOLIDATED_TABLE_QUERY = "SELECT g.faction, g.realm, g.auction_id, g.item_id, Count(*) AS transactions, MAX(expected_end) AS max_end, MAX(buyout_amount) AS last_buyout, MAX(bid_amount) AS last_bid, MAX(v.snapshot_hash) AS active_hash "
-      + "FROM %s AS g "
-      + "LEFT JOIN "
-      + "(SELECT DISTINCT auction_id, snapshot_hash FROM import.auction_snapshot WHERE timestamp = (SELECT MAX(timestamp) FROM import.auction_snapshot ) AND expected_end >= NOW()) AS v ON (g.auction_id = v.auction_id AND g.snapshot_hash = v.snapshot_hash)"
-      + "GROUP BY g.faction, g.realm, g.auction_id, g.item_id";
 
   @Setter
   @Getter(AccessLevel.PROTECTED)

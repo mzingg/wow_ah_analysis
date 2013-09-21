@@ -3,16 +3,15 @@ package ch.mrwolf.wow.dbimport.io;
 import java.io.File;
 import java.util.Calendar;
 import java.util.Map;
+import java.util.Set;
 
 import ch.mrwolf.wow.dbimport.model.AuctionExportRecord;
 
 public interface ReaderCallback {
 
-  public void setRecordProcessingEnabled(final boolean recordProcessingState);
-
-  public boolean isRecordProcessingEnabled();
-
   public void init();
+
+  public Set<String> getProcessedFiles();
 
   public boolean beforeFile(final File file, final Calendar snapshotTime, final String snapshotMd5Hash);
 

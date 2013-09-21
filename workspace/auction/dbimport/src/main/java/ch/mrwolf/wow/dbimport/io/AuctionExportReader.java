@@ -5,9 +5,13 @@ import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.Calendar;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
+import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,8 +36,20 @@ public class AuctionExportReader implements ReaderCallback {
 
   private static final String EXPORT_FILE_EXTENSION = "json.bz2";
 
+  private static final int SNAPSHOT_SIZE = 20000;
+
+  private static final DecimalFormat MS_FORMAT = new DecimalFormat("0.000");
+
   @Setter
   private String directoryPath;
+
+  @Getter
+  private int fileCount;
+
+  @Getter
+  private int recordCount;
+
+  private Set<String> processedFiles;
 
   @Setter
   @Autowired
@@ -41,8 +57,15 @@ public class AuctionExportReader implements ReaderCallback {
 
   private final JsonFactory jsonFactory;
 
+  private int snapshotCount;
+  private long snapshotTime;
+
   public AuctionExportReader() {
     this.jsonFactory = new JsonFactory(new ObjectMapper());
+    this.recordCount = 0;
+    this.fileCount = 0;
+    this.snapshotCount = 0;
+    this.snapshotTime = System.currentTimeMillis();
   }
 
   public void read() {
@@ -61,17 +84,29 @@ public class AuctionExportReader implements ReaderCallback {
 
   @Override
   public void init() {
-    log.debug("Initializing");
-
     if (readerCallback != null) {
       readerCallback.init();
     }
+    this.processedFiles = getProcessedFiles();
 
     log.debug("Initialized");
   }
 
   @Override
+  public Set<String> getProcessedFiles() {
+    if (readerCallback == null) {
+      return new HashSet<>();
+    }
+    return readerCallback.getProcessedFiles();
+  }
+
+  @Override
   public boolean beforeFile(final File file, final Calendar snapshotTime, final String snapshotMd5Hash) {
+    if (processedFiles.contains(snapshotMd5Hash)) {
+      log.debug("Skipped file {} because it is in the list of already processed files.", file.getAbsolutePath());
+      return false;
+    }
+
     final boolean result = readerCallback != null ? readerCallback.beforeFile(file, snapshotTime, snapshotMd5Hash) : true;
     if (!result) {
       log.debug("Skipped file {} because of callback.", file.getAbsolutePath());
@@ -85,12 +120,19 @@ public class AuctionExportReader implements ReaderCallback {
     if (readerCallback != null) {
       readerCallback.afterFile(file, snapshotTime, snapshotMd5Hash);
     }
-    log.debug("Processed file {}.", file.getAbsolutePath());
+    logRecordStatus(false);
+    fileCount++;
+    log.info("Processed file {}.", file.getAbsolutePath());
   }
 
   @Override
   public boolean beforeRecord(final Map<String, Object> recordData, final Calendar snapshotTime, final String fileMd5Hash) {
-    return readerCallback != null ? readerCallback.beforeRecord(recordData, snapshotTime, fileMd5Hash) : true;
+    final boolean result = readerCallback != null ? readerCallback.beforeRecord(recordData, snapshotTime, fileMd5Hash) : true;
+    if (!result) {
+      log.debug("Skipped record {} because of callback.", recordData);
+    }
+
+    return result;
   }
 
   @Override
@@ -98,6 +140,24 @@ public class AuctionExportReader implements ReaderCallback {
     if (readerCallback != null) {
       readerCallback.afterRecord(record);
     }
+    logRecordStatus(true);
+    recordCount++;
+  }
+
+  private void logRecordStatus(final boolean onlyWhenSnapshotSizeReached) {
+    if (onlyWhenSnapshotSizeReached && recordCount < snapshotCount + SNAPSHOT_SIZE) {
+      return;
+    }
+
+    final long newSnapshotTime = System.currentTimeMillis();
+
+    final int count = recordCount - snapshotCount;
+    final long duration = newSnapshotTime - snapshotTime;
+
+    log.info("Read {} records. {}ms per record.", count, MS_FORMAT.format(duration * 1d / count));
+
+    snapshotTime = newSnapshotTime;
+    snapshotCount = recordCount;
   }
 
   @Override
@@ -106,20 +166,6 @@ public class AuctionExportReader implements ReaderCallback {
       readerCallback.close();
     }
     log.debug("Closed");
-  }
-
-  @Override
-  public void setRecordProcessingEnabled(final boolean recordProcessingState) {
-    if (readerCallback == null) {
-      return;
-    }
-
-    readerCallback.setRecordProcessingEnabled(recordProcessingState);
-  }
-
-  @Override
-  public boolean isRecordProcessingEnabled() {
-    return readerCallback != null ? readerCallback.isRecordProcessingEnabled() : true;
   }
 
   private void processDirectoy(final File directory) {
@@ -171,10 +217,6 @@ public class AuctionExportReader implements ReaderCallback {
   }
 
   private void processRecords(final File file, final Calendar snapshotTime, final String fileMd5Hash) {
-    if (!isRecordProcessingEnabled()) {
-      return;
-    }
-
     try {
 
       try (BZip2CompressorInputStream inputStream = new BZip2CompressorInputStream(new FileInputStream(file))) {

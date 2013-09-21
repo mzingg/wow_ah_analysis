@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context" xsi:schemaLocation="
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx" xsi:schemaLocation="
     http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
     http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+    http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.0.xsd
 ">
-
+  <tx:annotation-driven/>
   <context:property-placeholder location="jdbc.postgres.properties" />
   <bean id="postgresDataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
     <property name="driverClassName" value="${jdbc.driverClassName}" />
@@ -12,25 +13,22 @@
     <property name="password" value="${jdbc.password}" />
   </bean>
 
-  <bean id="postgresReaderCallback" class="ch.mrwolf.wow.dbimport.io.directdb.ProcessingCallback">
-    <property name="tableName" value="import.auction_snapshot" />
-    <property name="consolidatedTableName" value="import.consolidated" />
-    <property name="batchSize" value="15000" />
+  <bean id="readerCallback" class="ch.mrwolf.wow.dbimport.io.directdb.ProcessingCallback">
+    <property name="snapshotTableName" value="import.auction_snapshot" />
+    <property name="fileLogTableName" value="import.completed_files" />
+    <property name="batchSize" value="10000" />
+    <property name="threadCount" value="8" />
     <property name="dataSource">
       <ref bean="postgresDataSource" />
     </property>
   </bean>
 
-  <!--
-    <bean id="readerCallback" class="ch.mrwolf.wow.dbimport.io.FilesystemProcessingStateCallback" >
-    <property name="statusFilename" value="D:\Projects\WoW Auction Database\var\processStatus.object" />
-    </bean>
-  -->
+  <!-- <bean id="readerCallback" class="ch.mrwolf.wow.dbimport.io.NopProcessingStateCallback" /> -->
 
   <bean id="auctionReader" class="ch.mrwolf.wow.dbimport.io.AuctionExportReader">
     <property name="directoryPath" value="D:\Projects\WoW Auction Database\var\fetchah_reduced" />
     <property name="readerCallback">
-      <ref bean="postgresReaderCallback" />
+      <ref bean="readerCallback" />
     </property>
   </bean>
 

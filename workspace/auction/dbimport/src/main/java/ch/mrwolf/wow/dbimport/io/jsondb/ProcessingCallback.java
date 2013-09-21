@@ -25,7 +25,7 @@ public class ProcessingCallback extends AbstractJdbcProcessingStateCallback {
   @Override
   public void afterFile(final File file, final Calendar snapshotTime, final String snapshotMd5Hash) {
 
-    final String sqlStatement = String.format("INSERT INTO %s (snapshot_hash, timestamp, data) VALUES (?, ?, ?)", getTableName());
+    final String sqlStatement = String.format("INSERT INTO %s (snapshot_hash, timestamp, data) VALUES (?, ?, ?)", getSnapshotTableName());
 
     String jsonValue = readBz2JsonFile(file);
 
@@ -61,7 +61,6 @@ public class ProcessingCallback extends AbstractJdbcProcessingStateCallback {
     } else {
       log.info("Skipped file [{}] because it contains no value", file.getName());
     }
-    super.afterFile(file, snapshotTime, snapshotMd5Hash);
   }
 
   private String readBz2JsonFile(final File file) {
@@ -80,15 +79,6 @@ public class ProcessingCallback extends AbstractJdbcProcessingStateCallback {
       log.error(e.getMessage(), e);
     }
     return jsonDataValue.toString();
-  }
-
-  @Override
-  protected boolean dropConsolidatedTable() {
-    return false;
-  }
-
-  @Override
-  protected void createConsolidatedTable() {
   }
 
 }

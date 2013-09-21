@@ -8,37 +8,21 @@ import lombok.Setter;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 
-public abstract class AbstractJdbcProcessingStateCallback extends AbstractProcessingStateCallback {
+public abstract class AbstractJdbcProcessingStateCallback extends NopProcessingStateCallback {
 
   @Getter(AccessLevel.PROTECTED)
   private JdbcTemplate jdbcTemplate; // NOPMD
 
   @Setter
   @Getter(AccessLevel.PROTECTED)
-  private String tableName; // NOPMD
+  private String snapshotTableName; // NOPMD
 
   @Setter
   @Getter(AccessLevel.PROTECTED)
-  private String consolidatedTableName; // NOPMD
+  private String fileLogTableName; // NOPMD
 
   public void setDataSource(final DataSource dataSource) {
     this.jdbcTemplate = new JdbcTemplate(dataSource);
   }
-
-  @Override
-  public void close() {
-    super.close();
-    recreateConsolidatedTabele();
-  }
-
-  private void recreateConsolidatedTabele() {
-    if (dropConsolidatedTable()) {
-      createConsolidatedTable();
-    }
-  }
-
-  protected abstract boolean dropConsolidatedTable();
-
-  protected abstract void createConsolidatedTable();
 
 }

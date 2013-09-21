@@ -9,7 +9,7 @@ import org.springframework.util.StringUtils;
 
 public enum Faction {
 
-  ALLIANCE((byte) 1), HORDE((byte) 2), NEUTRAL((byte) 3);
+  ALLIANCE((byte) 1), HORDE((byte) 2), NEUTRAL((byte) 3), SPECIAL((byte) 99);
 
   @Getter
   private byte databaseId;

@@ -6,7 +6,9 @@ import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -181,12 +183,29 @@ public class AuctionExportReader implements ReaderCallback {
         return fileName.endsWith(EXPORT_FILE_EXTENSION);
       }
     });
+    Arrays.sort(fileNames, new Comparator<String>() {
+
+      @Override
+      public int compare(final String o1, final String o2) {
+        return o1.compareTo(o2) * -1;
+      }
+
+    });
 
     final File[] subDirectories = directory.listFiles(new FileFilter() {
       @Override
       public boolean accept(final File file) {
         return file.canRead() && file.isDirectory();
       }
+    });
+
+    Arrays.sort(subDirectories, new Comparator<File>() {
+
+      @Override
+      public int compare(final File o1, final File o2) {
+        return o1.compareTo(o2) * -1;
+      }
+
     });
 
     // Depth first recursion

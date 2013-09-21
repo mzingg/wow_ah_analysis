@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.transaction.annotation.Transactional;
 
 import ch.mrwolf.wow.dbimport.model.AuctionDuration;
 import ch.mrwolf.wow.dbimport.model.AuctionExportRecord;
@@ -64,8 +63,11 @@ public class DatabaseStorageQueue implements Runnable {
     running = true;
     while (workQueue.size() > 0 || running) {
 
+      if (workQueue.size() > 0) {
+        log.info("Remaining queue size: {}", workQueue.size());
+      }
+
       final Queue<AuctionExportRecord> records = dequeue();
-      log.info("Remaining queue size: {}", workQueue.size());
       flushQueue(records);
 
       try {
@@ -76,7 +78,6 @@ public class DatabaseStorageQueue implements Runnable {
     }
   }
 
-  @Transactional
   private void flushQueue(final Queue<AuctionExportRecord> processingQueue) {
     if (processingQueue.size() == 0) {
       return;
@@ -153,6 +154,6 @@ public class DatabaseStorageQueue implements Runnable {
 
     final long duration = end - start;
 
-    log.info("Stored {} records. {}ms pre record.", count, MS_FORMAT.format(duration * 1d / count));
+    log.info("Stored {} records. {}ms per record.", count, MS_FORMAT.format(duration * 1d / count));
   }
 }

@@ -14,7 +14,7 @@ import java.util.Set;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
@@ -24,7 +24,7 @@ import ch.mrwolf.wow.dbimport.io.AbstractJdbcProcessingStateCallback;
 import ch.mrwolf.wow.dbimport.model.AuctionDuration;
 import ch.mrwolf.wow.dbimport.model.AuctionExportRecord;
 
-@CommonsLog
+@Slf4j
 public class ProcessingCallback extends AbstractJdbcProcessingStateCallback {
 
   private final static int DEFAULT_BATCH_SIZE = 15000;
@@ -70,7 +70,7 @@ public class ProcessingCallback extends AbstractJdbcProcessingStateCallback {
     });
 
     final long end = System.currentTimeMillis();
-    log.info("Updating took " + (end - start) + "ms");
+    log.info("Updating took {}ms", end - start);
   }
 
   @Override
@@ -90,7 +90,7 @@ public class ProcessingCallback extends AbstractJdbcProcessingStateCallback {
       return;
     }
 
-    log.info("Flushe Queue: " + processingQueue.size() + " Elemente.");
+    log.info("Flushe Queue: {} Elemente.", processingQueue.size());
     final String sqlStatement = String
         .format(
             "INSERT INTO %s (auction_id, faction, realm, snapshot_hash, timestamp, expected_end, item_id, time_left, pet_species_id, pet_breed_id, pet_level, pet_quality_id, owner, bid_amount, buyout_amount, quantity, rand, seed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",

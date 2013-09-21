@@ -11,15 +11,15 @@ import org.springframework.jdbc.core.JdbcTemplate;
 public abstract class AbstractJdbcProcessingStateCallback extends AbstractProcessingStateCallback {
 
   @Getter(AccessLevel.PROTECTED)
-  private JdbcTemplate jdbcTemplate;
+  private JdbcTemplate jdbcTemplate; // NOPMD
 
   @Setter
   @Getter(AccessLevel.PROTECTED)
-  private String tableName;
+  private String tableName; // NOPMD
 
   @Setter
   @Getter(AccessLevel.PROTECTED)
-  private String consolidatedTableName;
+  private String consolidatedTableName; // NOPMD
 
   public void setDataSource(final DataSource dataSource) {
     this.jdbcTemplate = new JdbcTemplate(dataSource);

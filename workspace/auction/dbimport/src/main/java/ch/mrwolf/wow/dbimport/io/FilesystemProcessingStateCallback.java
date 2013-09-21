@@ -10,11 +10,11 @@ import java.io.Serializable;
 import java.util.Calendar;
 
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.util.StringUtils;
 
-@CommonsLog
+@Slf4j
 public class FilesystemProcessingStateCallback extends AbstractProcessingStateCallback implements Serializable {
 
   private static final long serialVersionUID = 1L;

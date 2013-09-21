@@ -9,7 +9,7 @@ import java.util.Calendar;
 import java.util.Map;
 
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
@@ -27,7 +27,7 @@ import com.fasterxml.jackson.core.io.SerializedString;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-@CommonsLog
+@Slf4j
 public class AuctionExportReader implements ReaderCallback {
 
   private static final String EXPORT_FILE_EXTENSION = "json.bz2";
@@ -74,7 +74,7 @@ public class AuctionExportReader implements ReaderCallback {
   public boolean beforeFile(final File file, final Calendar snapshotTime, final String snapshotMd5Hash) {
     final boolean result = readerCallback != null ? readerCallback.beforeFile(file, snapshotTime, snapshotMd5Hash) : true;
     if (!result) {
-      log.debug(String.format("Skipped file %s because of callback.", file.getAbsolutePath()));
+      log.debug("Skipped file {} because of callback.", file.getAbsolutePath());
     }
 
     return result;
@@ -85,7 +85,7 @@ public class AuctionExportReader implements ReaderCallback {
     if (readerCallback != null) {
       readerCallback.afterFile(file, snapshotTime, snapshotMd5Hash);
     }
-    log.debug(String.format("Processed file %s.", file.getAbsolutePath()));
+    log.debug("Processed file {}.", file.getAbsolutePath());
   }
 
   @Override
@@ -125,7 +125,7 @@ public class AuctionExportReader implements ReaderCallback {
   private void processDirectoy(final File directory) {
 
     if (!directory.isDirectory() || !directory.canRead()) {
-      log.error(String.format("Configured directory path [%s] is not a directory or not readeable.", directoryPath));
+      log.error("Configured directory path [{}] is not a directory or not readeable.", directoryPath);
       return;
     }
 
@@ -154,7 +154,7 @@ public class AuctionExportReader implements ReaderCallback {
       final File fileToProcess = new File(filePath);
 
       if (!fileToProcess.exists() || !fileToProcess.canRead()) {
-        log.error(String.format("Cannot access file %s.", filePath));
+        log.error("Cannot access file {}.", filePath);
         continue;
       }
 

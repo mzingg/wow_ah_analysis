@@ -9,33 +9,33 @@ import java.util.Set;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 import ch.mrwolf.wow.dbimport.model.AuctionExportRecord;
 
-@CommonsLog
+@Slf4j
 public class AbstractProcessingStateCallback implements ReaderCallback {
 
   private static final int SNAPSHOT_SIZE = 10000;
 
   @Getter
   @Setter
-  private boolean recordProcessingEnabled;
+  private boolean recordProcessingEnabled; // NOPMD
 
   @Getter
   @Setter(AccessLevel.PROTECTED)
-  private int fileCount;
+  private int fileCount; // NOPMD
 
   @Getter
   @Setter(AccessLevel.PROTECTED)
-  private int recordCount;
+  private int recordCount; // NOPMD
 
   @Getter(AccessLevel.PROTECTED)
   @Setter(AccessLevel.PROTECTED)
-  private Set<String> processedFiles;
+  private Set<String> processedFiles; // NOPMD
 
   @Getter(AccessLevel.PROTECTED)
   @Setter(AccessLevel.PROTECTED)
-  private Set<Integer> processedRecords;
+  private Set<Integer> processedRecords; // NOPMD
 
   protected transient long snapshotTime;
 
@@ -56,13 +56,9 @@ public class AbstractProcessingStateCallback implements ReaderCallback {
   }
 
   @Override
-  public void close() {
-  }
-
-  @Override
   public boolean beforeFile(final File file, final Calendar snapshotTime, final String snapshotMd5Hash) {
     if (processedFiles.contains(snapshotMd5Hash)) {
-      log.info("Skipping file [" + file.getName() + "]");
+      log.info("Skipping file [{}]", file.getName());
       return false;
     }
     return true;
@@ -74,7 +70,7 @@ public class AbstractProcessingStateCallback implements ReaderCallback {
     processedFiles.add(snapshotMd5Hash);
     processedRecords.clear();
 
-    log.info(String.format("Processed file [%s].", file.getName()));
+    log.info("Processed file [{}].", file.getName());
   }
 
   @Override
@@ -103,15 +99,22 @@ public class AbstractProcessingStateCallback implements ReaderCallback {
       return;
     }
 
-    long newSnapshotTime = System.currentTimeMillis();
+    final long newSnapshotTime = System.currentTimeMillis();
 
-    int count = recordCount - snapshotCount;
-    long duration = newSnapshotTime - snapshotTime;
+    final int count = recordCount - snapshotCount;
+    final long duration = newSnapshotTime - snapshotTime;
 
-    log.info(String.format("Processed %d records in %dms.", count, duration));
+    log.info("Processed {} records in {}ms.", count, duration);
 
     snapshotTime = newSnapshotTime;
     snapshotCount = recordCount;
+  }
+
+  /**
+   * Empty default implementation.
+   */
+  @Override
+  public void close() {
   }
 
 }

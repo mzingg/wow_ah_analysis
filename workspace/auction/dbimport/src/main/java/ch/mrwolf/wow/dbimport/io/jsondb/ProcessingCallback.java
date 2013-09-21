@@ -10,7 +10,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Calendar;
 
-import lombok.extern.apachecommons.CommonsLog;
+import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.postgresql.util.PGobject;
@@ -19,7 +19,7 @@ import org.springframework.util.StringUtils;
 
 import ch.mrwolf.wow.dbimport.io.AbstractJdbcProcessingStateCallback;
 
-@CommonsLog
+@Slf4j
 public class ProcessingCallback extends AbstractJdbcProcessingStateCallback {
 
   @Override
@@ -59,7 +59,7 @@ public class ProcessingCallback extends AbstractJdbcProcessingStateCallback {
       }
 
     } else {
-      log.info(String.format("Skipped file [%s] because it contains no value", file.getName()));
+      log.info("Skipped file [{}] because it contains no value", file.getName());
     }
     super.afterFile(file, snapshotTime, snapshotMd5Hash);
   }

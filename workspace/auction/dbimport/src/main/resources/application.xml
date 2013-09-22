@@ -15,7 +15,7 @@
     <property name="snapshotTableName" value="import.auction_snapshot" />
     <property name="fileLogTableName" value="import.completed_files" />
     <property name="batchSize" value="15000" />
-    <property name="threadCount" value="6" />
+    <property name="threadCount" value="8" />
     <property name="dataSource">
       <ref bean="postgresDataSource" />
     </property>

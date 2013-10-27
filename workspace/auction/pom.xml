@@ -99,6 +99,12 @@
         <artifactId>postgresql</artifactId>
         <version>9.1-901.jdbc4</version>
       </dependency>
+      
+      <dependency>
+        <groupId>com.microsoft</groupId>
+        <artifactId>sqljdbc</artifactId>
+        <version>4.0.2206</version>
+      </dependency>
 
       <dependency>
         <groupId>org.apache.commons</groupId>

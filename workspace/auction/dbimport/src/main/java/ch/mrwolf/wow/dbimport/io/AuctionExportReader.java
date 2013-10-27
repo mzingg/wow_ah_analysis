@@ -407,11 +407,18 @@ public class AuctionExportReader implements ReaderCallback {
   private String getMd5HashOfFile(final File file) {
     String result = null;
 
-    try (FileInputStream fileStream = new FileInputStream(file)) {
-      result = DigestUtils.md2Hex(fileStream);
-    } catch (IOException e) {
-      log.error(e.getMessage(), e);
-    }
+    /*
+     * try (FileInputStream fileStream = new FileInputStream(file)) {
+     * result = DigestUtils.md2Hex(fileStream);
+     * } catch (IOException e) {
+     * log.error(e.getMessage(), e);
+     * }
+     */
+
+    String filePath = file.getAbsolutePath() + "/" + file.getName();
+    filePath = filePath.replace(directoryPath, "");
+
+    result = DigestUtils.md2Hex(filePath);
     return result;
   }
 

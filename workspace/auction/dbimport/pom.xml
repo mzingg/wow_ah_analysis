@@ -77,6 +77,11 @@
     </dependency>
 
     <dependency>
+      <groupId>com.microsoft</groupId>
+      <artifactId>sqljdbc</artifactId>
+    </dependency>
+    
+    <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-compress</artifactId>
     </dependency>

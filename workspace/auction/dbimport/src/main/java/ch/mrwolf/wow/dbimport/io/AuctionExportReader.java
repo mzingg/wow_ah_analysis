@@ -19,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 
 import ch.mrwolf.wow.dbimport.model.AuctionDuration;
@@ -40,6 +39,8 @@ public class AuctionExportReader implements ReaderCallback {
 
   private static final int SNAPSHOT_SIZE = 20000;
 
+  private static final int DEFAULT_DELAY_MS = 5000;
+
   private static final DecimalFormat MS_FORMAT = new DecimalFormat("0.000");
 
   @Setter
@@ -51,10 +52,12 @@ public class AuctionExportReader implements ReaderCallback {
   @Getter
   private int recordCount;
 
+  @Setter
+  private int delayMillis;
+
   private Set<String> processedFiles;
 
   @Setter
-  @Autowired
   private ReaderCallback readerCallback;
 
   private final JsonFactory jsonFactory;
@@ -68,6 +71,7 @@ public class AuctionExportReader implements ReaderCallback {
     this.fileCount = 0;
     this.snapshotCount = 0;
     this.snapshotTime = System.currentTimeMillis();
+    this.delayMillis = DEFAULT_DELAY_MS;
   }
 
   public void read() {
@@ -125,6 +129,14 @@ public class AuctionExportReader implements ReaderCallback {
     logRecordStatus(false);
     fileCount++;
     log.info("Processed file {}.", file.getAbsolutePath());
+
+    if (delayMillis > 0) {
+      try {
+        Thread.sleep(delayMillis);
+      } catch (InterruptedException e) {
+        log.error(e.getMessage(), e);
+      }
+    }
   }
 
   @Override
@@ -142,7 +154,6 @@ public class AuctionExportReader implements ReaderCallback {
     if (readerCallback != null) {
       readerCallback.afterRecord(record);
     }
-    logRecordStatus(true);
     recordCount++;
   }
 
@@ -156,7 +167,9 @@ public class AuctionExportReader implements ReaderCallback {
     final int count = recordCount - snapshotCount;
     final long duration = newSnapshotTime - snapshotTime;
 
-    log.info("Read {} records. {}ms per record.", count, MS_FORMAT.format(duration * 1d / count));
+    if (count > 0) {
+      log.info("Read {} records. {}ms per record.", count, MS_FORMAT.format(duration * 1d / count));
+    }
 
     snapshotTime = newSnapshotTime;
     snapshotCount = recordCount;

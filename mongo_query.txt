@@ -1,0 +1,1 @@
+db.auctionExportRecord.aggregate([{$match: {faction: "HORDE", realm: "thrall"}}, { $group : { _id : "$auctionId", itemId: {$max:"$itemId"}, events: { $push : { hash: "$snapshotHash", bidAmount: "$bidAmount", buyoutAmount: "$buyoutAmount", timeLeft: "$timeLeft"} }} }, {$out: 'aggregated'}])

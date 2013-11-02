@@ -1,8 +1,6 @@
-package ch.mrwolf.wow.dbimport.io.directdb;
+package ch.mrwolf.wow.dbimport.io.mongodb;
 
 import java.io.File;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Set;
@@ -12,20 +10,33 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.jdbc.core.RowCallbackHandler;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
-import ch.mrwolf.wow.dbimport.io.AbstractJdbcProcessingStateCallback;
+import ch.mrwolf.wow.dbimport.io.NopProcessingStateCallback;
 import ch.mrwolf.wow.dbimport.model.AuctionDuration;
 import ch.mrwolf.wow.dbimport.model.AuctionExportRecord;
 import ch.mrwolf.wow.dbimport.model.Faction;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
+
 @Slf4j
-public class ProcessingCallback extends AbstractJdbcProcessingStateCallback {
+public class ProcessingCallback extends NopProcessingStateCallback {
 
   private final static int DEFAULT_BATCH_SIZE = 5000;
   private final static int DEFAULT_THREAD_COUNT = 8;
+  private final static String SNAPSHOT_COLLECTION_NAME = "auctionExportRecord";
 
-  private final static String SELECT_PROCESSED_FILES_STATEMENT = "SELECT DISTINCT snapshot_hash FROM %s WHERE faction = 99";
+  @Autowired
+  @Setter
+  @Getter(AccessLevel.PROTECTED)
+  private AuctionExportRecordRepository repository;
+
+  @Getter(AccessLevel.PROTECTED)
+  private final MongoTemplate mongoTemplate;
 
   @Setter
   @Getter(AccessLevel.PROTECTED)
@@ -35,11 +46,12 @@ public class ProcessingCallback extends AbstractJdbcProcessingStateCallback {
   @Getter(AccessLevel.PROTECTED)
   private int threadCount;
 
-  private DatabaseStorageQueue storageQueue;
+  private StorageQueue storageQueue;
   private ThreadGroup storageThreads;
 
-  public ProcessingCallback() {
+  public ProcessingCallback(final MongoTemplate mongoTemplate) {
     super();
+    this.mongoTemplate = mongoTemplate;
     this.batchSize = DEFAULT_BATCH_SIZE;
     this.threadCount = DEFAULT_THREAD_COUNT;
   }
@@ -48,10 +60,10 @@ public class ProcessingCallback extends AbstractJdbcProcessingStateCallback {
   public void init() {
     super.init();
 
-    storageQueue = new DatabaseStorageQueue(getJdbcTemplate(), getSnapshotTableName(), batchSize);
+    storageQueue = new StorageQueue(SNAPSHOT_COLLECTION_NAME, getBatchSize(), getRepository(), getMongoTemplate());
 
     storageThreads = new ThreadGroup("Database Storage Threads");
-    for (int i = 1; i <= threadCount; i++) {
+    for (int i = 1; i <= getThreadCount(); i++) {
       Thread t = new Thread(storageThreads, storageQueue);
       t.start();
     }
@@ -76,17 +88,20 @@ public class ProcessingCallback extends AbstractJdbcProcessingStateCallback {
     final long start = System.currentTimeMillis();
 
     final Set<String> result = new HashSet<>();
-    final String sqlStatement = String.format(SELECT_PROCESSED_FILES_STATEMENT, getSnapshotTableName());
-    getJdbcTemplate().query(sqlStatement, new Object[0], new RowCallbackHandler() {
-      @Override
-      public void processRow(final ResultSet rs) throws SQLException {
-        final String md5Hash = rs.getString("snapshot_hash");
-        result.add(md5Hash);
-      }
-    });
+
+    final DBCollection records = getMongoTemplate().getCollection(SNAPSHOT_COLLECTION_NAME);
+
+    final BasicDBObject factionFilter = new BasicDBObject("faction", "SPECIAL");
+    final BasicDBObject snapshotSelection = new BasicDBObject("_id", 0).append("snapshotHash", 1);
+
+    final DBCursor results = records.find(factionFilter, snapshotSelection);
+    while (results.hasNext()) {
+      DBObject currentResult = results.next();
+      result.add((String) currentResult.get("snapshotHash"));
+    }
 
     final long end = System.currentTimeMillis();
-    log.info("Retrieving processed files took {}ms", end - start);
+    log.info("Retrieving processed files took {}ms. Found {} already processed files.", end - start, result.size());
 
     return result;
   }

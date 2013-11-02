@@ -1,43 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context" xsi:schemaLocation="
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mongo="http://www.springframework.org/schema/data/mongo" xmlns:context="http://www.springframework.org/schema/context" xsi:schemaLocation="
     http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd
     http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
 ">
-  <!-- 
-  <context:property-placeholder location="jdbc.postgres.properties" />
-  <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
-    <property name="driverClassName" value="${jdbc.driverClassName}" />
-    <property name="url" value="${jdbc.url}" />
-    <property name="username" value="${jdbc.username}" />
-    <property name="password" value="${jdbc.password}" />
-  </bean>
-   -->
 
-  <context:property-placeholder location="jdbc.mssql.properties" />
-  <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close">
-    <property name="driverClassName" value="${jdbc.driverClassName}" />
-    <property name="url" value="${jdbc.url}" />
-    <property name="username" value="${jdbc.username}" />
-    <property name="password" value="${jdbc.password}" />
-  </bean>
+  <context:component-scan base-package="org.springframework.data.repository.Repository" />
+
+  <context:property-placeholder location="mongodb.properties" />
+  <mongo:db-factory id="mongoDbFactory" host="${mongo.host}" port="${mongo.port}" dbname="${mongo.databaseName}" write-concern="UNACKNOWLEDGED" />
   
-  <bean id="readerCallback" class="ch.mrwolf.wow.dbimport.io.directdb.ProcessingCallback">
-    <property name="snapshotTableName" value="auction_snapshot" />
-    <property name="fileLogTableName" value="import.completed_files" />
-    <property name="batchSize" value="15000" />
-    <property name="threadCount" value="8" />
-    <property name="dataSource">
-      <ref bean="dataSource" />
-    </property>
+  <mongo:repositories base-package="ch.mrwolf.wow.dbimport.io.mongodb" />  
+
+  <bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
+    <constructor-arg ref="mongoDbFactory" />
+  </bean>
+
+  <bean id="readerCallback" class="ch.mrwolf.wow.dbimport.io.mongodb.ProcessingCallback">
+    <constructor-arg ref="mongoTemplate" />
+    <property name="batchSize" value="50000" />
+    <property name="threadCount" value="1" />
   </bean>
 
   <!-- <bean id="readerCallback" class="ch.mrwolf.wow.dbimport.io.NopProcessingStateCallback" /> -->
 
   <bean id="auctionReader" class="ch.mrwolf.wow.dbimport.io.AuctionExportReader">
-    <property name="directoryPath" value="D:\Projects\WoW Auction Database\var\fetchah_reduced" />
-    <property name="readerCallback">
-      <ref bean="readerCallback" />
-    </property>
+    <property name="directoryPath" value="D:\Projects\WoW Auction Database\var\fetchah" />
+    <property name="readerCallback" ref="readerCallback" />
+    <property name="delayMillis" value="7000" />
   </bean>
 
 </beans>

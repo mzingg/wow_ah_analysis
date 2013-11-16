@@ -9,25 +9,44 @@
 
   <context:property-placeholder location="mongodb.properties" />
   <mongo:db-factory id="mongoDbFactory" host="${mongo.host}" port="${mongo.port}" dbname="${mongo.databaseName}" write-concern="UNACKNOWLEDGED" />
-  
-  <mongo:repositories base-package="ch.mrwolf.wow.dbimport.io.mongodb" />  
+
+  <mongo:repositories base-package="ch.mrwolf.wow.dbimport.model.mongodb" />
 
   <bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
     <constructor-arg ref="mongoDbFactory" />
   </bean>
 
-  <bean id="readerCallback" class="ch.mrwolf.wow.dbimport.io.mongodb.ProcessingCallback">
-    <constructor-arg ref="mongoTemplate" />
-    <property name="batchSize" value="50000" />
-    <property name="threadCount" value="1" />
+  <bean id="setup" class="ch.mrwolf.wow.dbimport.tasks.TaskList">
+    <property name="tasks">
+      <list>
+      </list>
+    </property>
   </bean>
 
-  <!-- <bean id="readerCallback" class="ch.mrwolf.wow.dbimport.io.NopProcessingStateCallback" /> -->
+  <bean id="nopReader" class="ch.mrwolf.wow.dbimport.io.AuctionExportReader">
+    <property name="disabled" value="true" />
+  </bean>
 
-  <bean id="auctionReader" class="ch.mrwolf.wow.dbimport.io.AuctionExportReader">
-    <property name="directoryPath" value="D:\Projects\WoW Auction Database\var\fetchah" />
-    <property name="readerCallback" ref="readerCallback" />
-    <property name="delayMillis" value="7000" />
+  <bean id="defaultReader" class="ch.mrwolf.wow.dbimport.io.AuctionExportReader">
+    <property name="directoryPath" value="D:\fetchah" />
+    <property name="readerCallback">
+      <bean class="ch.mrwolf.wow.dbimport.io.mongodb.ProcessingCallback">
+        <constructor-arg ref="mongoTemplate" />
+        <property name="batchSize" value="50000" />
+        <property name="threadCount" value="2" />
+      </bean>
+    </property>
+    <property name="delayMillis" value="250" />
+  </bean>
+
+  <bean id="cleanup" class="ch.mrwolf.wow.dbimport.tasks.TaskList">
+    <property name="tasks">
+      <list>
+        <bean class="ch.mrwolf.wow.dbimport.tasks.mongodb.ConsolidateExportLog">
+          <constructor-arg ref="mongoTemplate" />
+        </bean>
+      </list>
+    </property>
   </bean>
 
 </beans>

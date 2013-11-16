@@ -8,7 +8,7 @@ import java.util.Set;
 
 import ch.mrwolf.wow.dbimport.model.AuctionExportRecord;
 
-public class NopProcessingStateCallback implements ReaderCallback {
+public abstract class NopProcessingStateCallback implements ReaderCallback {
 
   @Override
   public void init() {

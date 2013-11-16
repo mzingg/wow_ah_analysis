@@ -55,6 +55,9 @@ public class AuctionExportReader implements ReaderCallback {
   @Setter
   private int delayMillis;
 
+  @Setter
+  private boolean disabled;
+
   private Set<String> processedFiles;
 
   @Setter
@@ -72,9 +75,15 @@ public class AuctionExportReader implements ReaderCallback {
     this.snapshotCount = 0;
     this.snapshotTime = System.currentTimeMillis();
     this.delayMillis = DEFAULT_DELAY_MS;
+    this.disabled = false;
   }
 
   public void read() {
+    if (disabled) {
+      log.info("Reader is disabled. Doing nothing.");
+      return;
+    }
+
     if (StringUtils.isEmpty(directoryPath)) {
       log.error("Invalid directory path set.");
       return;
@@ -313,7 +322,7 @@ public class AuctionExportReader implements ReaderCallback {
     AuctionExportRecord result = new AuctionExportRecord();
     result.setFaction(faction);
     result.setRealm(realm);
-    result.setSnapshotTime(snapshotTime);
+    result.setSnapshotTime(snapshotTime.getTimeInMillis());
     result.setSnapshotHash(fileMd5Hash);
 
     if (recordData.containsKey("auc")) {

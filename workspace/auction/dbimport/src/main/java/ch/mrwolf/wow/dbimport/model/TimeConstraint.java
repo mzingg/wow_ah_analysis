@@ -1,10 +1,14 @@
 package ch.mrwolf.wow.dbimport.model;
 
+import lombok.Getter;
+
 public class TimeConstraint {
 
-  private final int startHour;
+  @Getter
+  private final int startHour; // NOPMD
 
-  private final int lengthHours;
+  @Getter
+  private final int lengthHours; // NOPMD
 
   public TimeConstraint(final int startHour, final int lengthHours) {
     this.startHour = startHour;

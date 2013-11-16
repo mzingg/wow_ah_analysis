@@ -26,7 +26,6 @@ import ch.mrwolf.wow.dbimport.model.AuctionExportRecordGroup;
 import ch.mrwolf.wow.dbimport.model.Faction;
 import ch.mrwolf.wow.dbimport.model.mongodb.AuctionExportRecordRepository;
 import ch.mrwolf.wow.dbimport.model.mongodb.AuctionsRepository;
-import ch.mrwolf.wow.dbimport.model.mongodb.ItemHistoryRepository;
 import ch.mrwolf.wow.dbimport.tasks.Task;
 
 import com.mongodb.BasicDBObject;
@@ -44,10 +43,6 @@ public class ConsolidateExportLog implements Task {
   private static final int THREAD_COUNT = 10;
 
   private final MongoTemplate mongoTemplate;
-
-  @Autowired
-  @Setter
-  private ItemHistoryRepository itemHistory;
 
   @Autowired
   @Setter
@@ -105,7 +100,6 @@ public class ConsolidateExportLog implements Task {
   public void execute() {
 
     final DBCollection snapshotCollection = mongoTemplate.getCollection(AuctionExportRecordRepository.COLLECTION_NAME);
-    //final DBCollection historyCollection = mongoTemplate.getCollection(ItemHistoryRepository.COLLECTION_NAME);
 
     final BasicDBObject factionFilter = new BasicDBObject("faction", new BasicDBObject("$ne", Faction.SPECIAL.name()));
     final DBCursor cursor = snapshotCollection.find(factionFilter);

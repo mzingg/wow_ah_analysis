@@ -1,1 +1,0 @@
-﻿SELECT item, COUNT(item) AS item_count, CAST(MIN(buyout) AS float) / 10000 AS min, CAST(MAX(buyout) AS float) / 10000 AS max, CAST(stddev_pop(buyout) AS float) / 10000 AS stddev FROM import.update_items() GROUP BY item  ORDER BY item_count,stddev;

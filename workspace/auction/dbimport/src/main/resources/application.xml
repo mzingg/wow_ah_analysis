@@ -7,7 +7,7 @@
 
   <context:component-scan base-package="org.springframework.data.repository.Repository" />
   
-  <context:property-placeholder location="mongodb.properties,import.properties,mongodb-defaults.properties,import-defaults.properties" ignore-resource-not-found="true" />
+  <context:property-placeholder location="mongodb-defaults.properties,import-defaults.properties,mongodb.properties,import.properties" ignore-resource-not-found="true" />
   
   <mongo:db-factory id="mongoDbFactory" host="${mongo.host}" port="${mongo.port}" dbname="${mongo.databaseName}" write-concern="UNACKNOWLEDGED" />
 

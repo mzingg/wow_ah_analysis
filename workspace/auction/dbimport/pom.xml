@@ -10,7 +10,7 @@
   <artifactId>dbimport</artifactId>
 
   <name>Word of Warcraft Auction Tools - Database Import</name>
-
+  
   <build>
     <plugins>
       <plugin>

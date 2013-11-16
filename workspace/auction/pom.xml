@@ -8,6 +8,21 @@
 
   <name>Word of Warcraft Auction Tools</name>
 
+  <developers>
+    <developer>
+      <email>mzingg@gmx.net</email>
+      <name>Markus Zingg</name>
+      <url>https://github.com/mzingg</url>
+      <id>mzingg</id>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:git://github.com/mzingg/wow_ah_analysis.git</connection>
+    <developerConnection>scm:git:git@github.com:mzingg/wow_ah_analysis.git</developerConnection>
+    <url>https://github.com/mzingg/wow_ah_analysis</url>
+  </scm>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <slf4j.version>1.7.5</slf4j.version>

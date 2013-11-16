@@ -6,8 +6,9 @@
 ">
 
   <context:component-scan base-package="org.springframework.data.repository.Repository" />
-
-  <context:property-placeholder location="mongodb.properties" />
+  
+  <context:property-placeholder location="mongodb.properties,import.properties,mongodb-defaults.properties,import-defaults.properties" ignore-resource-not-found="true" />
+  
   <mongo:db-factory id="mongoDbFactory" host="${mongo.host}" port="${mongo.port}" dbname="${mongo.databaseName}" write-concern="UNACKNOWLEDGED" />
 
   <mongo:repositories base-package="ch.mrwolf.wow.dbimport.model.mongodb" />
@@ -28,15 +29,15 @@
   </bean>
 
   <bean id="defaultReader" class="ch.mrwolf.wow.dbimport.io.AuctionExportReader">
-    <property name="directoryPath" value="D:\fetchah" />
+    <property name="directoryPath" value="${import.sourceDirectory}" />
     <property name="readerCallback">
       <bean class="ch.mrwolf.wow.dbimport.io.mongodb.ProcessingCallback">
         <constructor-arg ref="mongoTemplate" />
-        <property name="batchSize" value="50000" />
-        <property name="threadCount" value="2" />
+        <property name="batchSize" value="${import.batchSize}" />
+        <property name="threadCount" value="${import.threadCount}" />
       </bean>
     </property>
-    <property name="delayMillis" value="250" />
+    <property name="delayMillis" value="${import.delayMillis}" />
   </bean>
 
   <bean id="cleanup" class="ch.mrwolf.wow.dbimport.tasks.TaskList">

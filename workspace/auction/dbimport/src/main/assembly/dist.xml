@@ -3,11 +3,11 @@
   <formats>
     <format>zip</format>
   </formats>
-  <baseDirectory>.</baseDirectory>
   <dependencySets>
     <dependencySet>
-      <outputDirectory>/lib</outputDirectory>
+      <outputDirectory>lib</outputDirectory>
       <useProjectArtifact>false</useProjectArtifact>
+      <unpack>false</unpack>
       <scope>runtime</scope>
       <excludes>
         <exclude>org.projectlombok:lombok</exclude>
@@ -17,7 +17,29 @@
   <fileSets>
     <fileSet>
       <directory>${project.build.directory}/classes</directory>
-      <outputDirectory>.</outputDirectory>
+      <outputDirectory>app</outputDirectory>
+      <excludes>
+        <exclude>*.properties</exclude>
+      </excludes>
+    </fileSet>
+    <fileSet>
+      <directory>${project.build.directory}/classes</directory>
+      <outputDirectory>config</outputDirectory>
+      <includes>
+        <include>*.properties</include>
+      </includes>
     </fileSet>
   </fileSets>
+  <files>
+    <file>
+      <source>${basedir}/src/main/assembly/start.bat</source>
+      <outputDirectory>.</outputDirectory>
+      <filtered>false</filtered>
+    </file>
+    <file>
+      <source>${basedir}/src/main/assembly/start.sh</source>
+      <outputDirectory>.</outputDirectory>
+      <filtered>false</filtered>
+    </file>
+  </files>
 </assembly>

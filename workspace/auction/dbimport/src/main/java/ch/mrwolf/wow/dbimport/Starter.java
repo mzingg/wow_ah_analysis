@@ -22,6 +22,7 @@ public class Starter {
     if (cmd == null) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp("Starter", setupOptions());
+        return;
     }
 
     try (ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext(SPRING_CONFIG_FILENAME)) {
@@ -45,8 +46,7 @@ public class Starter {
     final CommandLineParser parser = new BasicParser();
     final Options options = setupOptions();
     try {
-      final CommandLine cmd = parser.parse(options, arguments);
-      return cmd;
+      return parser.parse(options, arguments);
     } catch (ParseException e) {
       return null;
     }

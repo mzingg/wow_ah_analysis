@@ -1,0 +1,15 @@
+{
+    "contents" : "plotItem <- function (itemId, realm='thrall', faction='HORDE') {\n  auctionRecordsCursor <- mongo.find(wow_auctions, 'wow_auctions.auctionRecord', createItemQuery(itemId, realm, faction))\n  auctionRecords <- NULL\n  while (mongo.cursor.next(auctionRecordsCursor)) {\n    value <- mongo.cursor.value(auctionRecordsCursor)\n    current <- data.frame(\n      year=mongo.bson.value(value, 'year'),\n      month=mongo.bson.value(value, 'month'),\n      day=mongo.bson.value(value, 'day'),\n      buyoutAmount=mongo.bson.value(value, 'buyoutAmount'),\n      quantity=mongo.bson.value(value, 'quantity')\n    )\n    auctionRecords <- rbind(auctionRecords, current)\n  }\n  auctionRecords$bucketDate <- as.POSIXct(paste(auctionRecords$day, auctionRecords$month + 1, auctionRecords$year, sep='.'), format='%d.%m.%Y')\n  auctionRecords$buyoutPrice <- auctionRecords$buyoutAmount/(auctionRecords$quantity)\n  \n  plotData <- ddply(auctionRecords, .(bucketDate, year), summarise, mean=mean(buyoutPrice/10000))\n  \n  return(xyplot(mean ~ bucketDate, plotData))\n}\n\ncreateItemQuery <- function (itemId, realm='thrall', faction='HORDE') {\n  buf <- mongo.bson.buffer.create()\n  mongo.bson.buffer.append(buf, 'realm', realm)\n  mongo.bson.buffer.append(buf, 'faction', faction)\n  mongo.bson.buffer.append.int(buf, 'itemId', itemId)\n  return(mongo.bson.from.buffer(buf))\n}",
+    "created" : 1385039905995.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2572659591",
+    "id" : "E446D1B",
+    "lastKnownWriteTime" : 1385049069,
+    "path" : "D:/Projects/WoW Auction Database/r-workspace/wowah_analysis/items.r",
+    "properties" : {
+    },
+    "source_on_save" : true,
+    "type" : "r_source"
+}

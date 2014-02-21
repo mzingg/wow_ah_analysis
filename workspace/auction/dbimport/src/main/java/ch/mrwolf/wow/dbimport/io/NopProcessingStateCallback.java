@@ -1,12 +1,12 @@
 package ch.mrwolf.wow.dbimport.io;
 
+import ch.mrwolf.wow.dbimport.model.AuctionExportRecord;
+
 import java.io.File;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import ch.mrwolf.wow.dbimport.model.AuctionExportRecord;
 
 public abstract class NopProcessingStateCallback implements ReaderCallback {
 

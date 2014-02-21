@@ -1,11 +1,10 @@
 package ch.mrwolf.wow.dbimport.model;
 
+import lombok.Getter;
+import org.springframework.util.StringUtils;
+
 import java.util.HashMap;
 import java.util.Map;
-
-import lombok.Getter;
-
-import org.springframework.util.StringUtils;
 
 public enum Faction {
 

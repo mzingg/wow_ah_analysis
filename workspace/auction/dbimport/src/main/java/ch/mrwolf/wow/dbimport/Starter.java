@@ -1,15 +1,9 @@
 package ch.mrwolf.wow.dbimport;
 
-import org.apache.commons.cli.BasicParser;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
-
 import ch.mrwolf.wow.dbimport.io.AuctionExportReader;
 import ch.mrwolf.wow.dbimport.tasks.TaskList;
+import org.apache.commons.cli.*;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 public class Starter {
 
@@ -22,7 +16,7 @@ public class Starter {
     if (cmd == null) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp("Starter", setupOptions());
-        return;
+      return;
     }
 
     try (ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext(SPRING_CONFIG_FILENAME)) {

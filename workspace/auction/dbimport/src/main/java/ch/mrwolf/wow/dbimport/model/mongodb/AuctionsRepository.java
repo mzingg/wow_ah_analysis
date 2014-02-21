@@ -1,8 +1,7 @@
 package ch.mrwolf.wow.dbimport.model.mongodb;
 
-import org.springframework.data.mongodb.repository.MongoRepository;
-
 import ch.mrwolf.wow.dbimport.model.AuctionRecord;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
 public interface AuctionsRepository extends MongoRepository<AuctionRecord, String> {
 

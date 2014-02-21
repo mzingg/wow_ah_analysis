@@ -6,10 +6,10 @@
     </encoder>
   </appender>
 
-  <logger name="org" level="ERROR" />
+  <logger name="org" level="ERROR"/>
 
   <root level="DEBUG">
-    <appender-ref ref="STDOUT" />
+    <appender-ref ref="STDOUT"/>
   </root>
 
 </configuration>

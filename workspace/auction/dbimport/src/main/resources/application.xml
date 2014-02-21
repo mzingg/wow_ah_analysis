@@ -1,20 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mongo="http://www.springframework.org/schema/data/mongo" xmlns:context="http://www.springframework.org/schema/context" xsi:schemaLocation="
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+       xmlns:context="http://www.springframework.org/schema/context" xsi:schemaLocation="
     http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
     http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd
     http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
 ">
 
-  <context:component-scan base-package="org.springframework.data.repository.Repository" />
-  
-  <context:property-placeholder location="mongodb-defaults.properties,import-defaults.properties,mongodb.properties,import.properties" ignore-resource-not-found="true" />
-  
-  <mongo:db-factory id="mongoDbFactory" host="${mongo.host}" port="${mongo.port}" dbname="${mongo.databaseName}" write-concern="UNACKNOWLEDGED" />
+  <context:component-scan base-package="org.springframework.data.repository.Repository"/>
 
-  <mongo:repositories base-package="ch.mrwolf.wow.dbimport.model.mongodb" />
+  <context:property-placeholder location="mongodb-defaults.properties,import-defaults.properties,mongodb.properties,import.properties" ignore-resource-not-found="true"/>
+
+  <mongo:db-factory id="mongoDbFactory" host="${mongo.host}" port="${mongo.port}" dbname="${mongo.databaseName}" write-concern="UNACKNOWLEDGED"/>
+
+  <mongo:repositories base-package="ch.mrwolf.wow.dbimport.model.mongodb"/>
 
   <bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
-    <constructor-arg ref="mongoDbFactory" />
+    <constructor-arg ref="mongoDbFactory"/>
   </bean>
 
   <bean id="setup" class="ch.mrwolf.wow.dbimport.tasks.TaskList">
@@ -25,26 +26,26 @@
   </bean>
 
   <bean id="nopReader" class="ch.mrwolf.wow.dbimport.io.AuctionExportReader">
-    <property name="disabled" value="true" />
+    <property name="disabled" value="true"/>
   </bean>
 
   <bean id="defaultReader" class="ch.mrwolf.wow.dbimport.io.AuctionExportReader">
-    <property name="directoryPath" value="${import.sourceDirectory}" />
+    <property name="directoryPath" value="${import.sourceDirectory}"/>
     <property name="readerCallback">
       <bean class="ch.mrwolf.wow.dbimport.io.mongodb.ProcessingCallback">
-        <constructor-arg ref="mongoTemplate" />
-        <property name="batchSize" value="${import.batchSize}" />
-        <property name="threadCount" value="${import.threadCount}" />
+        <constructor-arg ref="mongoTemplate"/>
+        <property name="batchSize" value="${import.batchSize}"/>
+        <property name="threadCount" value="${import.threadCount}"/>
       </bean>
     </property>
-    <property name="delayMillis" value="${import.delayMillis}" />
+    <property name="delayMillis" value="${import.delayMillis}"/>
   </bean>
 
   <bean id="cleanup" class="ch.mrwolf.wow.dbimport.tasks.TaskList">
     <property name="tasks">
       <list>
         <bean class="ch.mrwolf.wow.dbimport.tasks.mongodb.ConsolidateExportLog">
-          <constructor-arg ref="mongoTemplate" />
+          <constructor-arg ref="mongoTemplate"/>
         </bean>
       </list>
     </property>

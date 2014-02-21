@@ -1,12 +1,8 @@
 package ch.mrwolf.wow.dbimport.model;
 
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.Stack;
-
 import lombok.Getter;
+
+import java.util.*;
 
 public class AuctionExportRecordGroup {
 

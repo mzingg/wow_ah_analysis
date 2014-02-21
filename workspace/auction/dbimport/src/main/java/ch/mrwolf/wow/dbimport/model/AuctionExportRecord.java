@@ -2,7 +2,6 @@ package ch.mrwolf.wow.dbimport.model;
 
 import lombok.Getter;
 import lombok.Setter;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
@@ -10,8 +9,8 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document
-@CompoundIndexes({ @CompoundIndex(name = "unique_record_index", def = "{'auctionId': 1, 'snapshotHash': 1}", unique = true, dropDups = true),
-    @CompoundIndex(name = "sort_records_index", def = "{'auctionId': 1, 'snapshotTime': 1}") })
+@CompoundIndexes({@CompoundIndex(name = "unique_record_index", def = "{'auctionId': 1, 'snapshotHash': 1}", unique = true, dropDups = true),
+    @CompoundIndex(name = "sort_records_index", def = "{'auctionId': 1, 'snapshotTime': 1}")})
 public class AuctionExportRecord {
 
   @Id

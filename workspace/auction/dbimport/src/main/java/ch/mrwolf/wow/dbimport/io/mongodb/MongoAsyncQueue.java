@@ -1,11 +1,9 @@
 package ch.mrwolf.wow.dbimport.io.mongodb;
 
+import ch.mrwolf.wow.dbimport.io.AsyncQueue;
 import lombok.AccessLevel;
 import lombok.Getter;
-
 import org.springframework.data.mongodb.core.MongoTemplate;
-
-import ch.mrwolf.wow.dbimport.io.AsyncQueue;
 
 public abstract class MongoAsyncQueue<T> extends AsyncQueue<T> {
 

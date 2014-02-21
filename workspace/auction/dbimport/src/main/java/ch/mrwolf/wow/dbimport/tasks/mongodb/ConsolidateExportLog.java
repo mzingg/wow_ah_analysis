@@ -1,24 +1,5 @@
 package ch.mrwolf.wow.dbimport.tasks.mongodb;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
-
-import org.bson.types.ObjectId;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.convert.MongoConverter;
-
 import ch.mrwolf.wow.dbimport.io.AsyncQueue;
 import ch.mrwolf.wow.dbimport.io.mongodb.MongoAsyncQueue;
 import ch.mrwolf.wow.dbimport.model.AuctionExportRecord;
@@ -27,12 +8,18 @@ import ch.mrwolf.wow.dbimport.model.Faction;
 import ch.mrwolf.wow.dbimport.model.mongodb.AuctionExportRecordRepository;
 import ch.mrwolf.wow.dbimport.model.mongodb.AuctionsRepository;
 import ch.mrwolf.wow.dbimport.tasks.Task;
+import com.mongodb.*;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.bson.types.ObjectId;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.mongodb.WriteConcern;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class ConsolidateExportLog implements Task {

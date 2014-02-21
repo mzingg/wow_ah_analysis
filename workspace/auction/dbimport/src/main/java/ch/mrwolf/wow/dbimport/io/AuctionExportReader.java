@@ -1,36 +1,24 @@
 package ch.mrwolf.wow.dbimport.io;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileInputStream;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.text.DecimalFormat;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
-
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
-import org.springframework.util.StringUtils;
-
 import ch.mrwolf.wow.dbimport.model.AuctionDuration;
 import ch.mrwolf.wow.dbimport.model.AuctionExportRecord;
 import ch.mrwolf.wow.dbimport.model.Faction;
-
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.io.SerializedString;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
+import org.springframework.util.StringUtils;
+
+import java.io.*;
+import java.text.DecimalFormat;
+import java.util.*;
 
 @Slf4j
 public class AuctionExportReader implements ReaderCallback {
@@ -150,7 +138,7 @@ public class AuctionExportReader implements ReaderCallback {
 
   @Override
   public boolean beforeRecord(final Map<String, Object> recordData, final Calendar snapshotTime, final String fileMd5Hash) {
-    final boolean result = readerCallback != null ? readerCallback.beforeRecord(recordData, snapshotTime, fileMd5Hash) : true;
+    final boolean result = readerCallback == null || readerCallback.beforeRecord(recordData, snapshotTime, fileMd5Hash);
     if (!result) {
       log.debug("Skipped record {} because of callback.", recordData);
     }

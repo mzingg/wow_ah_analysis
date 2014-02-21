@@ -1,5 +1,22 @@
 package ch.mrwolf.wow.dbimport.io.mongodb;
 
+import ch.mrwolf.wow.dbimport.io.AsyncQueue;
+import ch.mrwolf.wow.dbimport.io.NopProcessingStateCallback;
+import ch.mrwolf.wow.dbimport.model.AuctionDuration;
+import ch.mrwolf.wow.dbimport.model.AuctionExportRecord;
+import ch.mrwolf.wow.dbimport.model.Faction;
+import ch.mrwolf.wow.dbimport.model.mongodb.AuctionExportRecordRepository;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+
 import java.io.File;
 import java.util.Calendar;
 import java.util.HashSet;
@@ -8,26 +25,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.mongodb.core.MongoTemplate;
-
-import ch.mrwolf.wow.dbimport.io.AsyncQueue;
-import ch.mrwolf.wow.dbimport.io.NopProcessingStateCallback;
-import ch.mrwolf.wow.dbimport.model.AuctionDuration;
-import ch.mrwolf.wow.dbimport.model.AuctionExportRecord;
-import ch.mrwolf.wow.dbimport.model.Faction;
-import ch.mrwolf.wow.dbimport.model.mongodb.AuctionExportRecordRepository;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
 
 @Slf4j
 public class ProcessingCallback extends NopProcessingStateCallback {

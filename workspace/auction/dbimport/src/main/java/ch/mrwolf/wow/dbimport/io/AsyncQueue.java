@@ -1,12 +1,12 @@
 package ch.mrwolf.wow.dbimport.io;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.text.DecimalFormat;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class AsyncQueue<T> implements Runnable {

@@ -1,8 +1,8 @@
 package ch.mrwolf.wow.dbimport.tasks;
 
-import java.util.List;
-
 import lombok.Setter;
+
+import java.util.List;
 
 public class TaskList {
 

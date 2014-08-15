@@ -1,14 +1,13 @@
 package mrwolf.dbimport.model;
 
 import lombok.Getter;
-import mrwolf.dbimport.export.AuctionHouseExportRecord;
 
 import java.util.*;
 
 public class AuctionExportRecordGroup {
 
   @Getter
-  private AuctionHouseExportRecord latestRecord;
+  private AuctionExportRecord latestRecord;
 
   private final Stack<String> recordHistory;
 
@@ -20,23 +19,23 @@ public class AuctionExportRecordGroup {
     bidHistory = new LinkedHashSet<>();
   }
 
-  public void collect(final AuctionHouseExportRecord record) {
+  public void collect(final AuctionExportRecord record) {
     if (record == null) {
       return;
     }
 
-    if (latestRecord != null && latestRecord.auctionId() != record.auctionId()) {
+    if (latestRecord != null && latestRecord.getAuctionId() != record.getAuctionId()) {
       return;
     }
 
-    recordHistory.push(record.id());
-    bidHistory.add(record.bidAmount());
+    recordHistory.push(record.getId());
+    bidHistory.add(record.getBidAmount());
 
     latestRecord = record;
   }
 
   public boolean isExpired(final long timePoint) {
-    long maxTime = latestRecord.originFile().snapshotTime() + latestRecord.timeLeft().getOffsetTime();
+    long maxTime = latestRecord.getSnapshotTime() + latestRecord.getTimeLeft().getOffsetTime();
     return timePoint > maxTime;
   }
 
@@ -47,15 +46,22 @@ public class AuctionExportRecordGroup {
   public AuctionRecord getAuctionRecord() {
     final AuctionRecord result = new AuctionRecord();
 
-    result.auctionId(latestRecord.auctionId());
-    result.lastOccurence(latestRecord.originFile().snapshotTime()).lastDuration(latestRecord.timeLeft());
-    result.faction(latestRecord.faction()).realm(latestRecord.realm());
+    result.setAuctionId(latestRecord.getAuctionId());
+    result.setLastOccurence(latestRecord.getSnapshotTime());
+    result.setLastDuration(latestRecord.getTimeLeft());
+    result.setFaction(latestRecord.getFaction());
+    result.setRealm(latestRecord.getRealm());
+    result.setOwner(latestRecord.getOwner());
 
-    result.itemId(latestRecord.itemId()).quantity(latestRecord.quantity());
-    result.petSpeciesId(latestRecord.petSpeciesId()).petBreedId(latestRecord.petBreedId()).petQualityId(latestRecord.petQualityId()).petLevel(latestRecord.petLevel());
+    result.setItemId(latestRecord.getItemId());
+    result.setQuantity(latestRecord.getQuantity());
+    result.setPetSpeciesId(latestRecord.getPetSpeciesId());
+    result.setPetBreedId(latestRecord.getPetBreedId());
+    result.setPetQualityId(latestRecord.getPetQualityId());
+    result.setPetLevel(latestRecord.getPetLevel());
 
-    result.buyoutAmount(latestRecord.buyoutAmount());
-    result.bidHistory(bidHistory);
+    result.setBuyoutAmount(latestRecord.getBuyoutAmount());
+    result.setBidHistory(bidHistory);
 
     return result;
   }

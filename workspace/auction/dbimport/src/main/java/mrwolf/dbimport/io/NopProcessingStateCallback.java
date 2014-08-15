@@ -1,6 +1,6 @@
 package mrwolf.dbimport.io;
 
-import mrwolf.dbimport.export.AuctionHouseExportRecord;
+import mrwolf.dbimport.model.AuctionExportRecord;
 
 import java.io.File;
 import java.util.Calendar;
@@ -38,7 +38,7 @@ public abstract class NopProcessingStateCallback implements ReaderCallback {
   }
 
   @Override
-  public void afterRecord(final AuctionHouseExportRecord record) {
+  public void afterRecord(final AuctionExportRecord record) {
   }
 
 }

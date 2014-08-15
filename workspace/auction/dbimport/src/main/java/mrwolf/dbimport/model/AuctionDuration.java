@@ -1,4 +1,4 @@
-package mrwolf.dbimport.common;
+package mrwolf.dbimport.model;
 
 import lombok.Getter;
 import org.springframework.util.StringUtils;

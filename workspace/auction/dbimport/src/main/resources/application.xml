@@ -12,27 +12,27 @@
 
   <mongo:db-factory id="mongoDbFactory" host="${mongo.host}" port="${mongo.port}" dbname="${mongo.databaseName}" write-concern="UNACKNOWLEDGED"/>
 
-  <mongo:repositories base-package="ch.mrwolf.wow.dbimport.model.mongodb"/>
+  <mongo:repositories base-package="mrwolf.dbimport.model.mongodb"/>
 
   <bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
     <constructor-arg ref="mongoDbFactory"/>
   </bean>
 
-  <bean id="setup" class="ch.mrwolf.wow.dbimport.tasks.TaskList">
+  <bean id="setup" class="mrwolf.dbimport.tasks.TaskList">
     <property name="tasks">
       <list>
       </list>
     </property>
   </bean>
 
-  <bean id="nopReader" class="ch.mrwolf.wow.dbimport.io.AuctionExportReader">
+  <bean id="nopReader" class="mrwolf.dbimport.io.AuctionExportReader">
     <property name="disabled" value="true"/>
   </bean>
 
-  <bean id="defaultReader" class="ch.mrwolf.wow.dbimport.io.AuctionExportReader">
+  <bean id="defaultReader" class="mrwolf.dbimport.io.AuctionExportReader">
     <property name="directoryPath" value="${import.sourceDirectory}"/>
     <property name="readerCallback">
-      <bean class="ch.mrwolf.wow.dbimport.io.mongodb.ProcessingCallback">
+      <bean class="mrwolf.dbimport.io.mongodb.ProcessingCallback">
         <constructor-arg ref="mongoTemplate"/>
         <property name="batchSize" value="${import.batchSize}"/>
         <property name="threadCount" value="${import.threadCount}"/>
@@ -41,10 +41,10 @@
     <property name="delayMillis" value="${import.delayMillis}"/>
   </bean>
 
-  <bean id="cleanup" class="ch.mrwolf.wow.dbimport.tasks.TaskList">
+  <bean id="cleanup" class="mrwolf.dbimport.tasks.TaskList">
     <property name="tasks">
       <list>
-        <bean class="ch.mrwolf.wow.dbimport.tasks.mongodb.ConsolidateExportLog">
+        <bean class="mrwolf.dbimport.tasks.mongodb.ConsolidateExportLog">
           <constructor-arg ref="mongoTemplate"/>
         </bean>
       </list>

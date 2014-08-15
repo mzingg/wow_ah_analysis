@@ -1,6 +1,6 @@
 package mrwolf.dbimport.io;
 
-import mrwolf.dbimport.model.AuctionExportRecord;
+import mrwolf.dbimport.export.AuctionHouseExportRecord;
 
 import java.io.File;
 import java.util.Calendar;
@@ -19,7 +19,7 @@ public interface ReaderCallback {
 
   public boolean beforeRecord(final Map<String, Object> recordData, final Calendar snapshotTime, final String fileMd5Hash);
 
-  public void afterRecord(final AuctionExportRecord record);
+  public void afterRecord(final AuctionHouseExportRecord record);
 
   public void close();
 

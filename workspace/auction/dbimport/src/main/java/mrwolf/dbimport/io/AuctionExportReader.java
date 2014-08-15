@@ -1,8 +1,8 @@
 package mrwolf.dbimport.io;
 
-import mrwolf.dbimport.model.AuctionDuration;
-import mrwolf.dbimport.model.AuctionExportRecord;
-import mrwolf.dbimport.model.Faction;
+import mrwolf.dbimport.common.AuctionDuration;
+import mrwolf.dbimport.export.AuctionHouseExportRecord;
+import mrwolf.dbimport.common.Faction;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -147,7 +147,7 @@ public class AuctionExportReader implements ReaderCallback {
   }
 
   @Override
-  public void afterRecord(final AuctionExportRecord record) {
+  public void afterRecord(final AuctionHouseExportRecord record) {
     if (readerCallback != null) {
       readerCallback.afterRecord(record);
     }
@@ -287,7 +287,7 @@ public class AuctionExportReader implements ReaderCallback {
                 });
 
                 if (beforeRecord(recordData, snapshotTime, fileMd5Hash)) {
-                  final AuctionExportRecord record = createRecord(recordData, faction, (String) realmData.get("slug"), snapshotTime, fileMd5Hash);
+                  final AuctionHouseExportRecord record = createRecord(recordData, faction, (String) realmData.get("slug"), snapshotTime, fileMd5Hash);
                   afterRecord(record);
                 }
               }
@@ -306,8 +306,8 @@ public class AuctionExportReader implements ReaderCallback {
     }
   }
 
-  private AuctionExportRecord createRecord(final Map<String, Object> recordData, final Faction faction, final String realm, final Calendar snapshotTime, final String fileMd5Hash) {
-    AuctionExportRecord result = new AuctionExportRecord();
+  private AuctionHouseExportRecord createRecord(final Map<String, Object> recordData, final Faction faction, final String realm, final Calendar snapshotTime, final String fileMd5Hash) {
+    AuctionHouseExportRecord result = new AuctionHouseExportRecord();
     result.setFaction(faction);
     result.setRealm(realm);
     result.setSnapshotTime(snapshotTime.getTimeInMillis());

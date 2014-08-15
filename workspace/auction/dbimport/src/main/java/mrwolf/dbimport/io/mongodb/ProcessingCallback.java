@@ -2,9 +2,9 @@ package mrwolf.dbimport.io.mongodb;
 
 import mrwolf.dbimport.io.AsyncQueue;
 import mrwolf.dbimport.io.NopProcessingStateCallback;
-import mrwolf.dbimport.model.AuctionDuration;
-import mrwolf.dbimport.model.AuctionExportRecord;
-import mrwolf.dbimport.model.Faction;
+import mrwolf.dbimport.common.AuctionDuration;
+import mrwolf.dbimport.export.AuctionHouseExportRecord;
+import mrwolf.dbimport.common.Faction;
 import mrwolf.dbimport.model.mongodb.AuctionExportRecordRepository;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
@@ -48,7 +48,7 @@ public class ProcessingCallback extends NopProcessingStateCallback {
   @Getter(AccessLevel.PROTECTED)
   private int threadCount;
 
-  private AsyncQueue<AuctionExportRecord> asyncQueue;
+  private AsyncQueue<AuctionHouseExportRecord> asyncQueue;
   private ExecutorService executor;
 
   public ProcessingCallback(final MongoTemplate mongoTemplate) {
@@ -62,11 +62,11 @@ public class ProcessingCallback extends NopProcessingStateCallback {
   public void init() {
     super.init();
 
-    asyncQueue = new MongoAsyncQueue<AuctionExportRecord>(getBatchSize(), getMongoTemplate()) {
+    asyncQueue = new MongoAsyncQueue<AuctionHouseExportRecord>(getBatchSize(), getMongoTemplate()) {
 
       @Override
-      protected void process(final Queue<AuctionExportRecord> processingQueue) {
-        getMongoTemplate().insert(processingQueue, AuctionExportRecord.class);
+      protected void process(final Queue<AuctionHouseExportRecord> processingQueue) {
+        getMongoTemplate().insert(processingQueue, AuctionHouseExportRecord.class);
       }
 
     };
@@ -126,7 +126,7 @@ public class ProcessingCallback extends NopProcessingStateCallback {
   }
 
   @Override
-  public void afterRecord(final AuctionExportRecord record) {
+  public void afterRecord(final AuctionHouseExportRecord record) {
     super.afterRecord(record);
     asyncQueue.enqueue(record);
   }
@@ -135,7 +135,7 @@ public class ProcessingCallback extends NopProcessingStateCallback {
   public void afterFile(final File file, final Calendar snapshotTime, final String snapshotMd5Hash) {
     super.afterFile(file, snapshotTime, snapshotMd5Hash);
 
-    AuctionExportRecord separatorRecord = new AuctionExportRecord();
+    AuctionHouseExportRecord separatorRecord = new AuctionHouseExportRecord();
     separatorRecord.setSnapshotHash(snapshotMd5Hash);
     separatorRecord.setSnapshotTime(snapshotTime.getTimeInMillis());
     separatorRecord.setAuctionId(0);

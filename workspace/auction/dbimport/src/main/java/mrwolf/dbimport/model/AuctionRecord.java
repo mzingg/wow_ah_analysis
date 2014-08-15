@@ -1,7 +1,11 @@
 package mrwolf.dbimport.model;
 
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
+import lombok.experimental.Accessors;
+import mrwolf.dbimport.common.AuctionDuration;
+import mrwolf.dbimport.common.Faction;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -11,64 +15,87 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Document
+@Getter
+@Accessors(fluent = true)
 public class AuctionRecord {
 
   @Id
-  @Getter
   @Setter
   private int auctionId;
 
-  @Getter
   @Setter
   private String realm;
 
-  @Getter
-  @Setter
   @Indexed
+  @Setter
   private Faction faction;
 
-  @Getter
+  @Indexed
   @Setter
   private int itemId;
 
-  @Getter
+  @Setter
+  private long buyoutAmount;
+
+  @Setter
+  private int quantity;
+
+  @Setter
+  private int petSpeciesId;
+
+  @Setter
+  private int petBreedId;
+
+  @Setter
+  private int petLevel;
+
+  @Setter
+  private int petQualityId;
+
   private long lastOccurence;
 
-  public void setLastOccurence(final long lastOccurence) {
-    this.lastOccurence = lastOccurence;
-    updateDateDependentFields();
-  }
-
-  @Getter
   private AuctionDuration lastDuration;
 
-  public void setLastDuration(final AuctionDuration lastDuration) {
+  private int year;
+  private int month;
+  private int day;
+  private int hour;
+
+  private int bidCount;
+  private long maxAuctionEnd;
+  private boolean probablySold;
+
+  private final Set<Long> bidHistory;
+
+  public AuctionRecord() {
+    this.lastDuration = AuctionDuration.VERY_LONG;
+    this.faction = Faction.SPECIAL;
+    this.bidHistory = new LinkedHashSet<>();
+  }
+
+  public AuctionRecord bidHistory(@NonNull final Set<Long> bidHistory) {
+    this.bidHistory.clear();
+    this.bidHistory.addAll(bidHistory);
+    this.bidCount = bidHistory.size();
+    return this;
+  }
+
+  public AuctionRecord lastOccurence(final long lastOccurence) {
+    this.lastOccurence = lastOccurence;
+    updateDateDependentFields();
+    return this;
+  }
+
+
+  public AuctionRecord lastDuration(final AuctionDuration lastDuration) {
     this.lastDuration = lastDuration;
     updateDateDependentFields();
     updateSoldFlag();
+    return this;
   }
-
-  @Getter
-  private boolean probablySold;
-
-  private void updateSoldFlag() {
-    this.probablySold = !AuctionDuration.SHORT.equals(lastDuration);
-  }
-
-  @Getter
-  private long maxAuctionEnd;
-
-  @Getter
-  private int year;
-  @Getter
-  private int month;
-  @Getter
-  private int day;
-  @Getter
-  private int hour;
 
   private void updateDateDependentFields() {
-    this.maxAuctionEnd = getLastOccurence() + getLastDuration().getOffsetTime();
+    this.maxAuctionEnd = lastOccurence() + lastDuration().getOffsetTime();
 
     final Calendar cal = Calendar.getInstance();
     cal.setTimeInMillis(this.maxAuctionEnd);
@@ -79,49 +106,8 @@ public class AuctionRecord {
     this.hour = cal.get(Calendar.HOUR_OF_DAY);
   }
 
-  @Getter
-  @Setter
-  private String owner;
-
-  @Getter
-  private Set<Long> bidHistory;
-
-  public void setBidHistory(final Set<Long> bidHistory) {
-    this.bidHistory = bidHistory;
-    this.bidCount = bidHistory != null ? bidHistory.size() : 0;
-  }
-
-  @Getter
-  private int bidCount;
-
-  @Getter
-  @Setter
-  private long buyoutAmount;
-
-  @Getter
-  @Setter
-  private int quantity;
-
-  @Getter
-  @Setter
-  private int petSpeciesId;
-
-  @Getter
-  @Setter
-  private int petBreedId;
-
-  @Getter
-  @Setter
-  private int petLevel;
-
-  @Getter
-  @Setter
-  private int petQualityId;
-
-  public AuctionRecord() {
-    this.lastDuration = AuctionDuration.VERY_LONG;
-    this.faction = Faction.SPECIAL;
-    this.bidHistory = new LinkedHashSet<>();
+  private void updateSoldFlag() {
+    this.probablySold = !AuctionDuration.SHORT.equals(lastDuration);
   }
 
 }

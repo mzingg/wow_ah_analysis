@@ -2,9 +2,9 @@ package mrwolf.dbimport.tasks.mongodb;
 
 import mrwolf.dbimport.io.AsyncQueue;
 import mrwolf.dbimport.io.mongodb.MongoAsyncQueue;
-import mrwolf.dbimport.model.AuctionExportRecord;
+import mrwolf.dbimport.export.AuctionHouseExportRecord;
 import mrwolf.dbimport.model.AuctionExportRecordGroup;
-import mrwolf.dbimport.model.Faction;
+import mrwolf.dbimport.common.Faction;
 import mrwolf.dbimport.model.mongodb.AuctionExportRecordRepository;
 import mrwolf.dbimport.model.mongodb.AuctionsRepository;
 import mrwolf.dbimport.tasks.Task;
@@ -104,7 +104,7 @@ public class ConsolidateExportLog implements Task {
     Set<Integer> idsToProcess = new HashSet<>();
     while (cursor.hasNext()) {
       final DBObject currentRecord = cursor.next();
-      final AuctionExportRecord record = converter.read(AuctionExportRecord.class, currentRecord);
+      final AuctionHouseExportRecord record = converter.read(AuctionHouseExportRecord.class, currentRecord);
 
       boolean recordBoundaryReached = false;
       if (record.getAuctionId() != currentAuctionId) {
@@ -146,7 +146,7 @@ public class ConsolidateExportLog implements Task {
     log.info("Finished.");
   }
 
-  private void collectCurrentRecord(final AuctionExportRecord record) {
+  private void collectCurrentRecord(final AuctionHouseExportRecord record) {
     int auctionId = record.getAuctionId();
 
     if (!currentAuctions.containsKey(auctionId)) {

@@ -1,12 +1,12 @@
 package mrwolf.dbimport.model.mongodb;
 
-import mrwolf.dbimport.model.AuctionExportRecord;
+import mrwolf.dbimport.export.AuctionHouseExportRecord;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface AuctionExportRecordRepository extends MongoRepository<AuctionExportRecord, String> {
+public interface AuctionExportRecordRepository extends MongoRepository<AuctionHouseExportRecord, String> {
 
   public final static String COLLECTION_NAME = "auctionExportRecord";
 
-  public AuctionExportRecord findByFaction(final int faction);
+  public AuctionHouseExportRecord findByFaction(final int faction);
 
 }

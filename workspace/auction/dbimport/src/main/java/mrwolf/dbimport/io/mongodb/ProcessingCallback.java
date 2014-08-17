@@ -1,5 +1,6 @@
 package mrwolf.dbimport.io.mongodb;
 
+import mrwolf.dbimport.export.AuctionHouseExportFile;
 import mrwolf.dbimport.io.AsyncQueue;
 import mrwolf.dbimport.io.NopProcessingStateCallback;
 import mrwolf.dbimport.common.AuctionDuration;
@@ -18,6 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 import java.io.File;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Queue;
@@ -135,14 +138,11 @@ public class ProcessingCallback extends NopProcessingStateCallback {
   public void afterFile(final File file, final Calendar snapshotTime, final String snapshotMd5Hash) {
     super.afterFile(file, snapshotTime, snapshotMd5Hash);
 
-    AuctionHouseExportRecord separatorRecord = new AuctionHouseExportRecord();
-    separatorRecord.setSnapshotHash(snapshotMd5Hash);
-    separatorRecord.setSnapshotTime(snapshotTime.getTimeInMillis());
-    separatorRecord.setAuctionId(0);
-    separatorRecord.setRealm("system");
-    separatorRecord.setFaction(Faction.SPECIAL);
-    separatorRecord.setTimeLeft(AuctionDuration.VERY_LONG);
-    separatorRecord.setOwner("system");
+    AuctionHouseExportRecord separatorRecord = new AuctionHouseExportRecord(new AuctionHouseExportFile(snapshotMd5Hash).snapshotTime(LocalDateTime.ofEpochSecond(snapshotTime.getTimeInMillis(), 0, ZoneOffset.UTC)));
+    separatorRecord.realm("system");
+    separatorRecord.auctionId(0);
+    separatorRecord.faction(Faction.SPECIAL);
+    separatorRecord.timeLeft(AuctionDuration.VERY_LONG);
 
     asyncQueue.enqueue(separatorRecord);
   }

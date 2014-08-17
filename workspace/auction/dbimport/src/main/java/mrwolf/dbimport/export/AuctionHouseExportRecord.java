@@ -23,8 +23,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class AuctionHouseExportRecord {
 
   @Id
-  @NonNull
-  private final String id;
+  private String id;
 
   @NonNull
   private final AuctionHouseExportFile originFile;
@@ -55,11 +54,14 @@ public class AuctionHouseExportRecord {
 
   private int petQualityId;
 
-  public AuctionHouseExportRecord(String id, AuctionHouseExportFile originFile) {
-    this.id = id;
+  public AuctionHouseExportRecord(AuctionHouseExportFile originFile) {
     this.originFile = originFile;
     this.realm = StringUtils.EMPTY;
     this.faction = Faction.NEUTRAL;
     this.timeLeft = AuctionDuration.VERY_LONG;
+  }
+
+  public AuctionHouseExportRecord() {
+    this(new AuctionHouseExportFile(StringUtils.EMPTY));
   }
 }

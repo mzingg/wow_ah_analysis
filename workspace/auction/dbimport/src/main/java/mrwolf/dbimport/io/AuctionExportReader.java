@@ -1,6 +1,7 @@
 package mrwolf.dbimport.io;
 
 import mrwolf.dbimport.common.AuctionDuration;
+import mrwolf.dbimport.export.AuctionHouseExportFile;
 import mrwolf.dbimport.export.AuctionHouseExportRecord;
 import mrwolf.dbimport.common.Faction;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -18,6 +19,8 @@ import org.springframework.util.StringUtils;
 
 import java.io.*;
 import java.text.DecimalFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 
 @Slf4j
@@ -307,107 +310,83 @@ public class AuctionExportReader implements ReaderCallback {
   }
 
   private AuctionHouseExportRecord createRecord(final Map<String, Object> recordData, final Faction faction, final String realm, final Calendar snapshotTime, final String fileMd5Hash) {
-    AuctionHouseExportRecord result = new AuctionHouseExportRecord();
-    result.setFaction(faction);
-    result.setRealm(realm);
-    result.setSnapshotTime(snapshotTime.getTimeInMillis());
-    result.setSnapshotHash(fileMd5Hash);
+    AuctionHouseExportRecord result = new AuctionHouseExportRecord(new AuctionHouseExportFile(fileMd5Hash).snapshotTime(LocalDateTime.ofEpochSecond(snapshotTime.getTimeInMillis(), 0, ZoneOffset.UTC)));
+    result.faction(faction).realm(realm);
 
     if (recordData.containsKey("auc")) {
       final Object value = recordData.get("auc");
       if (value instanceof Integer) {
-        result.setAuctionId((Integer) value);
+        result.auctionId((Integer) value);
       }
     }
 
     if (recordData.containsKey("item")) {
       final Object value = recordData.get("item");
       if (value instanceof Integer) {
-        result.setItemId((Integer) value);
-      }
-    }
-
-    if (recordData.containsKey("owner")) {
-      final Object value = recordData.get("owner");
-      if (value instanceof String) {
-        result.setOwner((String) value);
+        result.itemId((Integer) value);
       }
     }
 
     if (recordData.containsKey("bid")) {
       final Object value = recordData.get("bid");
       if (value instanceof Integer) {
-        result.setBidAmount((Integer) value);
+        result.bidAmount((Integer) value);
       }
     }
 
     if (recordData.containsKey("buyout")) {
       final Object value = recordData.get("buyout");
       if (value instanceof Integer) {
-        result.setBuyoutAmount((Integer) value);
+        result.buyoutAmount((Integer) value);
       }
     }
 
     if (recordData.containsKey("quantity")) {
       final Object value = recordData.get("quantity");
       if (value instanceof Integer) {
-        result.setQuantity((Integer) value);
+        result.quantity((Integer) value);
       }
     }
 
     if (recordData.containsKey("bid")) {
       final Object value = recordData.get("bid");
       if (value instanceof Integer) {
-        result.setBidAmount((Integer) value);
+        result.bidAmount((Integer) value);
       }
     }
 
     if (recordData.containsKey("timeLeft")) {
       final Object value = recordData.get("timeLeft");
       if (value instanceof String) {
-        result.setTimeLeft(AuctionDuration.lookup((String) value));
+        result.timeLeft(AuctionDuration.lookup((String) value));
       }
     }
 
     if (recordData.containsKey("petSpeciesId")) {
       final Object value = recordData.get("petSpeciesId");
       if (value instanceof Integer) {
-        result.setPetSpeciesId((Integer) value);
+        result.petSpeciesId((Integer) value);
       }
     }
 
     if (recordData.containsKey("petBreedId")) {
       final Object value = recordData.get("petBreedId");
       if (value instanceof Integer) {
-        result.setPetBreedId((Integer) value);
+        result.petBreedId((Integer) value);
       }
     }
 
     if (recordData.containsKey("petLevel")) {
       final Object value = recordData.get("petLevel");
       if (value instanceof Integer) {
-        result.setPetLevel((Integer) value);
+        result.petLevel((Integer) value);
       }
     }
 
     if (recordData.containsKey("petQualityId")) {
       final Object value = recordData.get("petQualityId");
       if (value instanceof Integer) {
-        result.setPetQualityId((Integer) value);
-      }
-    }
-
-    if (recordData.containsKey("rand")) {
-      final Object value = recordData.get("rand");
-      if (value instanceof Integer) {
-        result.setRand((Integer) value);
-      }
-    }
-
-    if (recordData.containsKey("seed")) {
-      final Object value = recordData.get("seed");
-      if (value instanceof Integer) {
-        result.setSeed((Integer) value);
+        result.petQualityId((Integer) value);
       }
     }
 

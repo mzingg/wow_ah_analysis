@@ -107,16 +107,16 @@ public class ConsolidateExportLog implements Task {
       final AuctionHouseExportRecord record = converter.read(AuctionHouseExportRecord.class, currentRecord);
 
       boolean recordBoundaryReached = false;
-      if (record.getAuctionId() != currentAuctionId) {
+      if (record.auctionId() != currentAuctionId) {
         recordBoundaryReached = true;
-        currentAuctionId = record.getAuctionId();
+        currentAuctionId = record.auctionId();
       }
 
       collectCurrentRecord(record);
 
       if (recordBoundaryReached) {
         if (counter % ENQUEUE_BATCH_SIZE == 0) {
-          handleExpiredRecords(new HashSet<Integer>(idsToProcess));
+          handleExpiredRecords(new HashSet<>(idsToProcess));
           idsToProcess.clear();
         }
         idsToProcess.add(currentAuctionId);
@@ -147,7 +147,7 @@ public class ConsolidateExportLog implements Task {
   }
 
   private void collectCurrentRecord(final AuctionHouseExportRecord record) {
-    int auctionId = record.getAuctionId();
+    int auctionId = record.auctionId();
 
     if (!currentAuctions.containsKey(auctionId)) {
       currentAuctions.put(auctionId, new AuctionExportRecordGroup());

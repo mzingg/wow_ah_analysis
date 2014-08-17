@@ -19,7 +19,7 @@ public enum Faction {
   static {
     for (Faction faction : values()) {
       lookupTable.put(faction.name().toLowerCase(), faction);
-      lookupTableById.put(faction.getDatabaseId(), faction);
+      lookupTableById.put(faction.databaseId, faction);
     }
   }
 

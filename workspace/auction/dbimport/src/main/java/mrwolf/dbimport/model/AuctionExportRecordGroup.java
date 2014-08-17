@@ -3,6 +3,7 @@ package mrwolf.dbimport.model;
 import lombok.Getter;
 import mrwolf.dbimport.export.AuctionHouseExportRecord;
 
+import java.time.ZoneOffset;
 import java.util.*;
 
 public class AuctionExportRecordGroup {
@@ -36,7 +37,7 @@ public class AuctionExportRecordGroup {
   }
 
   public boolean isExpired(final long timePoint) {
-    long maxTime = latestRecord.originFile().snapshotTime() + latestRecord.timeLeft().getOffsetTime();
+    long maxTime = latestRecord.originFile().snapshotTime().toEpochSecond(ZoneOffset.UTC) + latestRecord.timeLeft().getOffsetTime();
     return timePoint > maxTime;
   }
 
@@ -48,7 +49,7 @@ public class AuctionExportRecordGroup {
     final AuctionRecord result = new AuctionRecord();
 
     result.auctionId(latestRecord.auctionId());
-    result.lastOccurence(latestRecord.originFile().snapshotTime()).lastDuration(latestRecord.timeLeft());
+    result.lastOccurence(latestRecord.originFile().snapshotTime().toEpochSecond(ZoneOffset.UTC)).lastDuration(latestRecord.timeLeft());
     result.faction(latestRecord.faction()).realm(latestRecord.realm());
 
     result.itemId(latestRecord.itemId()).quantity(latestRecord.quantity());

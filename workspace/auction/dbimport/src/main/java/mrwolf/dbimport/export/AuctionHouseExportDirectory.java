@@ -3,7 +3,6 @@ package mrwolf.dbimport.export;
 import lombok.*;
 import lombok.experimental.Accessors;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
@@ -14,11 +13,7 @@ import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.time.temporal.ChronoField;
-import java.time.temporal.TemporalField;
-import java.util.ArrayList;
-import java.util.Calendar;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -27,28 +22,29 @@ import java.util.regex.Pattern;
 import static java.lang.Integer.parseInt;
 
 @Document
-@Getter
 @Accessors(fluent = true)
 @EqualsAndHashCode(exclude = "inputDirectory")
 @ToString
 public class AuctionHouseExportDirectory {
 
   private static final AuctionExportFilenameFilter AUCTION_EXPORT_FILENAME_FILTER = new AuctionExportFilenameFilter();
-
-  @Id
-  @Setter
-  private String id;
-
   @Transient
   @NonNull
   private final File inputDirectory;
-
   private final List<AuctionHouseExportFile> fileList;
+  @Id
+  @Getter
+  @Setter
+  private String id;
 
   public AuctionHouseExportDirectory(String path) throws AuctionHouseExportException {
     this.inputDirectory = checkInputDirectory(path);
     this.fileList = new LinkedList<>();
     readDirectoryRecursivly(this.fileList, this.inputDirectory);
+  }
+
+  public List<AuctionHouseExportFile> fileList() {
+    return Collections.unmodifiableList(fileList);
   }
 
   private File checkInputDirectory(String path) throws AuctionHouseExportException {
@@ -60,9 +56,15 @@ public class AuctionHouseExportDirectory {
   }
 
   private void readDirectoryRecursivly(List<AuctionHouseExportFile> outputList, File parentDirectory) {
-    for (File child : parentDirectory.listFiles()) {
+    File[] listFiles = parentDirectory.listFiles();
+    // lisFiles can be null, so we have to check this case (should however not occure at this point)
+    if (listFiles == null) {
+      listFiles = new File[0];
+    }
+
+    for (File child : listFiles) {
       if (AUCTION_EXPORT_FILENAME_FILTER.accept(parentDirectory, child.getName())) {
-        AuctionHouseExportFile cur = new AuctionHouseExportFile(md5HashOfFile(child)).file(child);
+        AuctionHouseExportFile cur = new AuctionHouseExportFile(hashOfFile(child)).file(child);
         cur.snapshotTime(AUCTION_EXPORT_FILENAME_FILTER.fileDate());
         outputList.add(cur);
       } else if (child.isDirectory() && child.canRead()) {
@@ -71,14 +73,12 @@ public class AuctionHouseExportDirectory {
     }
   }
 
-  private String md5HashOfFile(final File file) {
-    String result;
+  private String hashOfFile(final File file) {
+    String result = StringUtils.EMPTY;
     try (FileInputStream fileStream = new FileInputStream(file)) {
-      result = DigestUtils.md5Hex(fileStream);
+      result = DigestUtils.sha1Hex(fileStream);
     } catch (IOException e) {
-      String filePath = file.getAbsolutePath() + File.separator + file.getName();
-      filePath = filePath.replace(inputDirectory.getAbsolutePath(), "");
-      result = DigestUtils.md5Hex(filePath);
+      // fall through
     }
 
     return result;

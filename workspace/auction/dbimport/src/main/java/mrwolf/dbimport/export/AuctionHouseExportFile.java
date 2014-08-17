@@ -8,8 +8,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.*;
 import lombok.experimental.Accessors;
-import mrwolf.dbimport.common.AuctionDuration;
-import mrwolf.dbimport.common.Faction;
+import mrwolf.dbimport.model.AuctionDuration;
+import mrwolf.dbimport.model.AuctionRecord;
+import mrwolf.dbimport.model.Faction;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
@@ -19,6 +20,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -35,23 +37,28 @@ public class AuctionHouseExportFile {
   private final String snapshotHash;
   @Transient
   private final JsonFactory jsonFactory;
+  @Transient
+  private final List<AuctionHouseExportRecord> records;
+  @Transient
+  private final Map<Integer, AuctionRecord> auctions;
+
   private LocalDateTime snapshotTime;
   @Transient
   private File file;
-  @Transient
-  private List<AuctionHouseExportRecord> records;
 
   public AuctionHouseExportFile(String snapshotHash) {
     this.snapshotHash = snapshotHash;
     this.jsonFactory = new JsonFactory(new ObjectMapper());
     snapshotTime = LocalDateTime.now();
     records = new LinkedList<>();
+    auctions = new HashMap<>();
   }
 
-  public List<AuctionHouseExportRecord> read() throws AuctionHouseExportException {
+  public synchronized AuctionHouseExportFile read() throws AuctionHouseExportException {
     if (file != null && file.exists() && file.canRead() && file.isFile()) {
       try {
         readBzipFile();
+        return this;
       } catch (IOException e) {
         throw new AuctionHouseExportException(e);
       }
@@ -59,7 +66,7 @@ public class AuctionHouseExportFile {
     throw new AuctionHouseExportException("Could not read export file [" + (file != null ? file.getAbsolutePath() : "no file") + "]");
   }
 
-  private void readBzipFile() throws IOException {
+  private void readBzipFile() throws IOException, AuctionHouseExportException {
     try (BZip2CompressorInputStream inputStream = new BZip2CompressorInputStream(new FileInputStream(file))) {
 
       try (JsonParser jp = jsonFactory.createParser(inputStream)) {
@@ -100,6 +107,10 @@ public class AuctionHouseExportFile {
               AuctionHouseExportRecord record = new AuctionHouseExportRecord(this).faction(faction).realm((String) realmData.get("slug"));
               fillRecord(record, recordData);
               records.add(record);
+              if (!auctions.containsKey(record.auctionId())) {
+                auctions.put(record.auctionId(), new AuctionRecord());
+              }
+              auctions.get(record.auctionId()).update(record);
             }
           }
 

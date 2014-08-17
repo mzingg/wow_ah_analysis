@@ -1,9 +1,9 @@
 package mrwolf.dbimport.io;
 
-import mrwolf.dbimport.common.AuctionDuration;
+import mrwolf.dbimport.model.AuctionDuration;
 import mrwolf.dbimport.export.AuctionHouseExportFile;
 import mrwolf.dbimport.export.AuctionHouseExportRecord;
-import mrwolf.dbimport.common.Faction;
+import mrwolf.dbimport.model.Faction;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;

@@ -3,10 +3,10 @@ package mrwolf.dbimport.tasks.mongodb;
 import mrwolf.dbimport.io.AsyncQueue;
 import mrwolf.dbimport.io.mongodb.MongoAsyncQueue;
 import mrwolf.dbimport.export.AuctionHouseExportRecord;
-import mrwolf.dbimport.model.AuctionExportRecordGroup;
-import mrwolf.dbimport.common.Faction;
-import mrwolf.dbimport.model.mongodb.AuctionExportRecordRepository;
-import mrwolf.dbimport.model.mongodb.AuctionsRepository;
+import mrwolf.dbimport.oldmodel.AuctionExportRecordGroup;
+import mrwolf.dbimport.model.Faction;
+import mrwolf.dbimport.oldmodel.mongodb.AuctionExportRecordRepository;
+import mrwolf.dbimport.oldmodel.mongodb.AuctionsRepository;
 import mrwolf.dbimport.tasks.Task;
 import com.mongodb.*;
 import lombok.Setter;
@@ -58,7 +58,7 @@ public class ConsolidateExportLog implements Task {
 
         List<String> objectIdList = new ArrayList<>();
         for (AuctionExportRecordGroup group : processingQueue) {
-          auctionsRepository.save(group.getAuctionRecord());
+          //auctionsRepository.save(group.);
 
           if (group.isExpired(System.currentTimeMillis())) {
             objectIdList.addAll(group.getHistory());

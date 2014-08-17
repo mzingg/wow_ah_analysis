@@ -1,4 +1,4 @@
-package mrwolf.dbimport.model;
+package mrwolf.dbimport.oldmodel;
 
 import lombok.Getter;
 import mrwolf.dbimport.export.AuctionHouseExportRecord;
@@ -45,19 +45,4 @@ public class AuctionExportRecordGroup {
     return Collections.unmodifiableList(recordHistory);
   }
 
-  public AuctionRecord getAuctionRecord() {
-    final AuctionRecord result = new AuctionRecord();
-
-    result.auctionId(latestRecord.auctionId());
-    result.lastOccurence(latestRecord.originFile().snapshotTime().toEpochSecond(ZoneOffset.UTC)).lastDuration(latestRecord.timeLeft());
-    result.faction(latestRecord.faction()).realm(latestRecord.realm());
-
-    result.itemId(latestRecord.itemId()).quantity(latestRecord.quantity());
-    result.petSpeciesId(latestRecord.petSpeciesId()).petBreedId(latestRecord.petBreedId()).petQualityId(latestRecord.petQualityId()).petLevel(latestRecord.petLevel());
-
-    result.buyoutAmount(latestRecord.buyoutAmount());
-    result.bidHistory(bidHistory);
-
-    return result;
-  }
 }

@@ -12,7 +12,7 @@
 
   <mongo:db-factory id="mongoDbFactory" host="${mongo.host}" port="${mongo.port}" dbname="${mongo.databaseName}" write-concern="UNACKNOWLEDGED"/>
 
-  <mongo:repositories base-package="mrwolf.dbimport.model.mongodb"/>
+  <mongo:repositories base-package="mrwolf.dbimport.oldmodel.mongodb"/>
 
   <bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
     <constructor-arg ref="mongoDbFactory"/>

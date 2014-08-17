@@ -1,4 +1,4 @@
-package mrwolf.dbimport.model;
+package mrwolf.dbimport.oldmodel;
 
 public enum HistoryGranularity {
 

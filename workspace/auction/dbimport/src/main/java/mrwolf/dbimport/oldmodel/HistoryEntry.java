@@ -1,4 +1,4 @@
-package mrwolf.dbimport.model;
+package mrwolf.dbimport.oldmodel;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -2,112 +2,168 @@ package mrwolf.dbimport.model;
 
 import lombok.Getter;
 import lombok.NonNull;
-import lombok.Setter;
 import lombok.experimental.Accessors;
-import mrwolf.dbimport.common.AuctionDuration;
-import mrwolf.dbimport.common.Faction;
+import mrwolf.dbimport.export.AuctionHouseExportException;
+import mrwolf.dbimport.export.AuctionHouseExportRecord;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.Calendar;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.LinkedList;
+import java.util.List;
 
 @Document
 @Getter
 @Accessors(fluent = true)
 public class AuctionRecord {
 
+  private final List<Long> bidHistory;
   @Id
-  @Setter
   private int auctionId;
-
-  @Setter
   private String realm;
-
   @Indexed
-  @Setter
   private Faction faction;
-
   @Indexed
-  @Setter
   private int itemId;
-
-  @Setter
   private long buyoutAmount;
-
-  @Setter
   private int quantity;
-
-  @Setter
   private int petSpeciesId;
-
-  @Setter
   private int petBreedId;
-
-  @Setter
   private int petLevel;
-
-  @Setter
   private int petQualityId;
-
   private long lastOccurence;
-
   private AuctionDuration lastDuration;
-
   private int year;
   private int month;
   private int day;
   private int hour;
-
-  private int bidCount;
-  private long maxAuctionEnd;
-  private boolean probablySold;
-
-  private final Set<Long> bidHistory;
+  private AuctionStatus status;
+  private boolean initialized;
 
   public AuctionRecord() {
     this.lastDuration = AuctionDuration.VERY_LONG;
     this.faction = Faction.SPECIAL;
-    this.bidHistory = new LinkedHashSet<>();
+    this.bidHistory = new LinkedList<>();
+    this.initialized = false;
+    this.status = AuctionStatus.ACTIVE;
   }
 
-  public AuctionRecord bidHistory(@NonNull final Set<Long> bidHistory) {
-    this.bidHistory.clear();
-    this.bidHistory.addAll(bidHistory);
-    this.bidCount = bidHistory.size();
-    return this;
-  }
+  public void update(@NonNull AuctionHouseExportRecord record) throws AuctionHouseExportException {
+    validate(record, this.initialized);
+    if (!this.initialized) {
+      updateMetaData(record);
+      this.initialized = true;
+    }
 
-  public AuctionRecord lastOccurence(final long lastOccurence) {
-    this.lastOccurence = lastOccurence;
+    lastOccurence = record.originFile().snapshotTime().toEpochSecond(ZoneOffset.UTC);
+    lastDuration = record.timeLeft();
+
     updateDateDependentFields();
-    return this;
+    updateStatusFlag();
+    bidHistory.add(record.bidAmount());
   }
 
+  private void validate(AuctionHouseExportRecord record, boolean compareMetaData) throws AuctionHouseExportException {
+    if (record.auctionId() <= 0) {
+      throw new AuctionHouseExportException("Invalid auctionId.");
+    }
 
-  public AuctionRecord lastDuration(final AuctionDuration lastDuration) {
-    this.lastDuration = lastDuration;
-    updateDateDependentFields();
-    updateSoldFlag();
-    return this;
+    if (record.faction() == null) {
+      throw new AuctionHouseExportException("Invalid faction.");
+    }
+
+    if (StringUtils.isBlank(record.realm())) {
+      throw new AuctionHouseExportException("Invalid realm.");
+    }
+
+    if (record.itemId() <= 0) {
+      throw new AuctionHouseExportException("Invalid itemId.");
+    }
+
+    if (record.quantity() <= 0) {
+      throw new AuctionHouseExportException("Invalid quantity.");
+    }
+
+    if (record.petSpeciesId() < 0) {
+      throw new AuctionHouseExportException("Invalid petSpeciesId.");
+    }
+
+    if (record.petBreedId() < 0) {
+      throw new AuctionHouseExportException("Invalid petBreedId.");
+    }
+
+    if (record.petQualityId() < 0) {
+      throw new AuctionHouseExportException("Invalid petQualityId.");
+    }
+
+    if (record.petLevel() < 0) {
+      throw new AuctionHouseExportException("Invalid petLevel.");
+    }
+
+    if (record.buyoutAmount() < 0) {
+      throw new AuctionHouseExportException("Invalid buyoutAmount.");
+    }
+
+    if (record.bidAmount() < 0) {
+      throw new AuctionHouseExportException("Invalid bidAmount.");
+    }
+
+    if (record.originFile() == null) {
+      throw new AuctionHouseExportException("Invalid originFile.");
+    }
+
+    if (StringUtils.isBlank(record.originFile().snapshotHash())) {
+      throw new AuctionHouseExportException("Invalid snapshotHash.");
+    }
+
+    if (record.originFile().snapshotTime() == null) {
+      throw new AuctionHouseExportException("Invalid snapshotTime.");
+    }
+
+    if (compareMetaData) {
+      if (auctionId() != record.auctionId() || !faction().equals(record.faction()) || !realm().equals(record.realm()) ||
+          itemId() != record.itemId() || quantity() != record.quantity() ||
+          petSpeciesId() != record.petSpeciesId() || petBreedId() != record.petBreedId() || petQualityId() != record.petQualityId() || petLevel() != record.petLevel()) {
+        throw new AuctionHouseExportException("Incompatible record.");
+      }
+    }
+  }
+
+  private void updateMetaData(AuctionHouseExportRecord record) throws AuctionHouseExportException {
+    this.auctionId = record.auctionId();
+    this.faction = record.faction();
+    this.realm = record.realm();
+    this.itemId = record.itemId();
+    this.quantity = record.quantity();
+    this.petSpeciesId = record.petSpeciesId();
+    this.petBreedId = record.petBreedId();
+    this.petQualityId = record.petQualityId();
+    this.petLevel = record.petLevel();
+    this.buyoutAmount = record.buyoutAmount();
   }
 
   private void updateDateDependentFields() {
-    this.maxAuctionEnd = lastOccurence() + lastDuration().getOffsetTime();
-
-    final Calendar cal = Calendar.getInstance();
-    cal.setTimeInMillis(this.maxAuctionEnd);
-
-    this.year = cal.get(Calendar.YEAR);
-    this.month = cal.get(Calendar.MONTH);
-    this.day = cal.get(Calendar.DAY_OF_MONTH);
-    this.hour = cal.get(Calendar.HOUR_OF_DAY);
+    LocalDateTime cal = LocalDateTime.ofEpochSecond(lastOccurence() + lastDuration().getOffsetTime(), 0, ZoneOffset.UTC);
+    this.year = cal.getYear();
+    this.month = cal.getMonthValue();
+    this.day = cal.getDayOfMonth();
+    this.hour = cal.getHour();
   }
 
-  private void updateSoldFlag() {
-    this.probablySold = !AuctionDuration.SHORT.equals(lastDuration);
+  private void updateStatusFlag() {
+    if (isExpired(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))) {
+      this.status = AuctionStatus.EXPIRED;
+    } else if (!AuctionDuration.SHORT.equals(lastDuration)) {
+      this.status = AuctionStatus.PROBABLY_SOLD;
+    }
+    // ACTIVE is the default in the Ctor
+  }
+
+  public boolean isExpired(long timePoint) {
+    return timePoint > (lastOccurence() + lastDuration().getOffsetTime());
   }
 
 }

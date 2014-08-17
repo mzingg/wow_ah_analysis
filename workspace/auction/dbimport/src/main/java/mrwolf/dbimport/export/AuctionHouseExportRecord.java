@@ -2,10 +2,11 @@ package mrwolf.dbimport.export;
 
 import lombok.*;
 import lombok.experimental.Accessors;
-import mrwolf.dbimport.common.AuctionDuration;
-import mrwolf.dbimport.common.Faction;
+import mrwolf.dbimport.model.AuctionDuration;
+import mrwolf.dbimport.model.Faction;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -26,6 +27,7 @@ public class AuctionHouseExportRecord {
   private String id;
 
   @NonNull
+  @Transient
   private final AuctionHouseExportFile originFile;
 
   private String realm;

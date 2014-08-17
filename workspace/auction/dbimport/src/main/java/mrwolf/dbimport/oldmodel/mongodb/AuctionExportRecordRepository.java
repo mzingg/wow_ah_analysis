@@ -1,4 +1,4 @@
-package mrwolf.dbimport.model.mongodb;
+package mrwolf.dbimport.oldmodel.mongodb;
 
 import mrwolf.dbimport.export.AuctionHouseExportRecord;
 import org.springframework.data.mongodb.repository.MongoRepository;

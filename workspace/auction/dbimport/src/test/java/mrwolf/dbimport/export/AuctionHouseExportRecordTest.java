@@ -64,7 +64,7 @@ public class AuctionHouseExportRecordTest {
   }
 
   private void assertRecord(AuctionHouseExportFile testFile, int expectedRecordCount, int indexToTest, Map<String, Object> expectedValues) throws AuctionHouseExportException {
-    List<AuctionHouseExportRecord> records = testFile.read().records();
+    List<AuctionHouseExportRecord> records = testFile.read(0).records();
 
     assertEquals(expectedRecordCount, records.size());
 

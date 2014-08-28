@@ -117,7 +117,7 @@ public class ProcessingCallback extends NopProcessingStateCallback {
 
     final DBCollection records = mongoTemplate.getCollection(AuctionExportRecordRepository.COLLECTION_NAME);
 
-    final BasicDBObject factionFilter = new BasicDBObject("faction", Faction.SPECIAL.name());
+    final BasicDBObject factionFilter = new BasicDBObject("faction", Faction.HORDE.name());
     final BasicDBObject snapshotSelection = new BasicDBObject("_id", 0).append("snapshotHash", 1);
 
     final DBCursor results = records.find(factionFilter, snapshotSelection);
@@ -138,10 +138,10 @@ public class ProcessingCallback extends NopProcessingStateCallback {
   public void afterFile(final File file, final Calendar snapshotTime, final String snapshotMd5Hash) {
     super.afterFile(file, snapshotTime, snapshotMd5Hash);
 
-    AuctionHouseExportRecord separatorRecord = new AuctionHouseExportRecord(new AuctionHouseExportFile(snapshotMd5Hash).snapshotTime(LocalDateTime.ofEpochSecond(snapshotTime.getTimeInMillis(), 0, ZoneOffset.UTC)));
+    AuctionHouseExportRecord separatorRecord = new AuctionHouseExportRecord(new AuctionHouseExportFile(snapshotMd5Hash).snapshotTime(snapshotTime.getTimeInMillis()));
     separatorRecord.realm("system");
     separatorRecord.auctionId(0);
-    separatorRecord.faction(Faction.SPECIAL);
+    separatorRecord.faction(Faction.HORDE);
     separatorRecord.timeLeft(AuctionDuration.VERY_LONG);
 
     asyncQueue.enqueue(separatorRecord);

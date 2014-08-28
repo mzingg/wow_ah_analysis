@@ -13,6 +13,7 @@ import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -65,7 +66,7 @@ public class AuctionHouseExportDirectory {
     for (File child : listFiles) {
       if (AUCTION_EXPORT_FILENAME_FILTER.accept(parentDirectory, child.getName())) {
         AuctionHouseExportFile cur = new AuctionHouseExportFile(hashOfFile(child)).file(child);
-        cur.snapshotTime(AUCTION_EXPORT_FILENAME_FILTER.fileDate());
+        cur.snapshotTime(AUCTION_EXPORT_FILENAME_FILTER.fileDate().toEpochSecond(ZoneOffset.UTC));
         outputList.add(cur);
       } else if (child.isDirectory() && child.canRead()) {
         readDirectoryRecursivly(outputList, child);

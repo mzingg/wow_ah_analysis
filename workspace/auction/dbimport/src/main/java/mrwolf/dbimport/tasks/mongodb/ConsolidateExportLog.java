@@ -6,7 +6,7 @@ import mrwolf.dbimport.export.AuctionHouseExportRecord;
 import mrwolf.dbimport.oldmodel.AuctionExportRecordGroup;
 import mrwolf.dbimport.model.Faction;
 import mrwolf.dbimport.oldmodel.mongodb.AuctionExportRecordRepository;
-import mrwolf.dbimport.oldmodel.mongodb.AuctionsRepository;
+import mrwolf.dbimport.persistence.AuctionRecordRepository;
 import mrwolf.dbimport.tasks.Task;
 import com.mongodb.*;
 import lombok.Setter;
@@ -37,7 +37,7 @@ public class ConsolidateExportLog implements Task {
 
   @Autowired
   @Setter
-  private AuctionsRepository auctionsRepository;
+  private AuctionRecordRepository auctionsRepository;
 
   private final Map<Integer, AuctionExportRecordGroup> currentAuctions;
 
@@ -88,7 +88,7 @@ public class ConsolidateExportLog implements Task {
 
     final DBCollection snapshotCollection = mongoTemplate.getCollection(AuctionExportRecordRepository.COLLECTION_NAME);
 
-    final BasicDBObject factionFilter = new BasicDBObject("faction", new BasicDBObject("$ne", Faction.SPECIAL.name()));
+    final BasicDBObject factionFilter = new BasicDBObject("faction", new BasicDBObject("$ne", Faction.HORDE.name()));
     final DBCursor cursor = snapshotCollection.find(factionFilter);
     cursor.sort(new BasicDBObject("auctionId", 1).append("snapshotTime", 1));
     cursor.batchSize(FETCH_BATCH_SIZE);

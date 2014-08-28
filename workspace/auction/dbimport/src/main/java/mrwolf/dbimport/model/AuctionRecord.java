@@ -7,20 +7,26 @@ import mrwolf.dbimport.export.AuctionHouseExportException;
 import mrwolf.dbimport.export.AuctionHouseExportRecord;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 @Document
 @Getter
 @Accessors(fluent = true)
 public class AuctionRecord {
 
-  private final List<Long> bidHistory;
+  @Transient
+  private final Map<String, BidHistoryEntry> bidHistoryUniqueTracker;
+  private final List<BidHistoryEntry> bidHistory;
+
   @Id
   private int auctionId;
   private String realm;
@@ -41,11 +47,15 @@ public class AuctionRecord {
   private int day;
   private int hour;
   private AuctionStatus status;
+
+  @Transient
   private boolean initialized;
 
   public AuctionRecord() {
+    this.realm = StringUtils.EMPTY;
     this.lastDuration = AuctionDuration.VERY_LONG;
-    this.faction = Faction.SPECIAL;
+    this.faction = Faction.NO_FACTION;
+    this.bidHistoryUniqueTracker = new LinkedHashMap<>();
     this.bidHistory = new LinkedList<>();
     this.initialized = false;
     this.status = AuctionStatus.ACTIVE;
@@ -58,15 +68,25 @@ public class AuctionRecord {
       this.initialized = true;
     }
 
-    lastOccurence = record.originFile().snapshotTime().toEpochSecond(ZoneOffset.UTC);
+    lastOccurence = record.originFile().snapshotTime();
     lastDuration = record.timeLeft();
 
     updateDateDependentFields();
     updateStatusFlag();
-    bidHistory.add(record.bidAmount());
+    BidHistoryEntry entry = new BidHistoryEntry(record.bidAmount(), lastOccurence, lastDuration);
+    if (!bidHistoryUniqueTracker.containsKey(entry.key())) {
+      bidHistoryUniqueTracker.put(entry.key(), entry);
+      bidHistory.add(entry);
+    }
   }
 
   private void validate(AuctionHouseExportRecord record, boolean compareMetaData) throws AuctionHouseExportException {
+
+    if (Faction.END_OF_FILE.equals(record.faction()) && record.auctionId() > 0) {
+      // Special case end of import file marker record needs not to be validated
+      return;
+    }
+
     if (record.auctionId() <= 0) {
       throw new AuctionHouseExportException("Invalid auctionId.");
     }
@@ -119,7 +139,7 @@ public class AuctionRecord {
       throw new AuctionHouseExportException("Invalid snapshotHash.");
     }
 
-    if (record.originFile().snapshotTime() == null) {
+    if (record.originFile().snapshotTime() <= 0) {
       throw new AuctionHouseExportException("Invalid snapshotTime.");
     }
 

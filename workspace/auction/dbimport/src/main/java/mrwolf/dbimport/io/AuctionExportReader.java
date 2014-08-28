@@ -1,9 +1,5 @@
 package mrwolf.dbimport.io;
 
-import mrwolf.dbimport.model.AuctionDuration;
-import mrwolf.dbimport.export.AuctionHouseExportFile;
-import mrwolf.dbimport.export.AuctionHouseExportRecord;
-import mrwolf.dbimport.model.Faction;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
@@ -13,14 +9,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import mrwolf.dbimport.export.AuctionHouseExportFile;
+import mrwolf.dbimport.export.AuctionHouseExportRecord;
+import mrwolf.dbimport.model.AuctionDuration;
+import mrwolf.dbimport.model.Faction;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
 import org.springframework.util.StringUtils;
 
 import java.io.*;
 import java.text.DecimalFormat;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.*;
 
 @Slf4j
@@ -33,29 +31,20 @@ public class AuctionExportReader implements ReaderCallback {
   private static final int DEFAULT_DELAY_MS = 5000;
 
   private static final DecimalFormat MS_FORMAT = new DecimalFormat("0.000");
-
+  private final JsonFactory jsonFactory;
   @Setter
   private String directoryPath;
-
   @Getter
   private int fileCount;
-
   @Getter
   private int recordCount;
-
   @Setter
   private int delayMillis;
-
   @Setter
   private boolean disabled;
-
   private Set<String> processedFiles;
-
   @Setter
   private ReaderCallback readerCallback;
-
-  private final JsonFactory jsonFactory;
-
   private int snapshotCount;
   private long snapshotTime;
 
@@ -157,6 +146,14 @@ public class AuctionExportReader implements ReaderCallback {
     recordCount++;
   }
 
+  @Override
+  public void close() {
+    if (readerCallback != null) {
+      readerCallback.close();
+    }
+    log.debug("Closed");
+  }
+
   private void logRecordStatus(final boolean onlyWhenSnapshotSizeReached) {
     if (onlyWhenSnapshotSizeReached && recordCount < snapshotCount + SNAPSHOT_SIZE) {
       return;
@@ -173,14 +170,6 @@ public class AuctionExportReader implements ReaderCallback {
 
     snapshotTime = newSnapshotTime;
     snapshotCount = recordCount;
-  }
-
-  @Override
-  public void close() {
-    if (readerCallback != null) {
-      readerCallback.close();
-    }
-    log.debug("Closed");
   }
 
   private void processDirectoy(final File directory) {
@@ -310,7 +299,7 @@ public class AuctionExportReader implements ReaderCallback {
   }
 
   private AuctionHouseExportRecord createRecord(final Map<String, Object> recordData, final Faction faction, final String realm, final Calendar snapshotTime, final String fileMd5Hash) {
-    AuctionHouseExportRecord result = new AuctionHouseExportRecord(new AuctionHouseExportFile(fileMd5Hash).snapshotTime(LocalDateTime.ofEpochSecond(snapshotTime.getTimeInMillis(), 0, ZoneOffset.UTC)));
+    AuctionHouseExportRecord result = new AuctionHouseExportRecord(new AuctionHouseExportFile(fileMd5Hash).snapshotTime(snapshotTime.getTimeInMillis()));
     result.faction(faction).realm(realm);
 
     if (recordData.containsKey("auc")) {

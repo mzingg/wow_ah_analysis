@@ -1,54 +1,35 @@
 package mrwolf.dbimport.model;
 
 import lombok.Getter;
-import org.springframework.util.StringUtils;
+import lombok.NonNull;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public enum Faction {
 
-  ALLIANCE((byte) 1), HORDE((byte) 2), NEUTRAL((byte) 3), SPECIAL((byte) 99);
-
-  @Getter
-  private byte databaseId;
-
+  NO_FACTION((byte) 0), ALLIANCE((byte) 1), HORDE((byte) 2), NEUTRAL((byte) 3), END_OF_FILE((byte) 99), END_OF_IMPORT((byte) 199);
   private final static Map<String, Faction> lookupTable = new HashMap<>();
-  private final static Map<Byte, Faction> lookupTableById = new HashMap<>();
 
   static {
     for (Faction faction : values()) {
       lookupTable.put(faction.name().toLowerCase(), faction);
-      lookupTableById.put(faction.databaseId, faction);
     }
   }
+
+  @Getter
+  private byte databaseId;
 
   private Faction(final byte databaseId) {
     this.databaseId = databaseId;
   }
 
-  public static Faction lookup(final String key) {
-    if (StringUtils.isEmpty(key)) {
-      return null;
+  public static Faction lookup(@NonNull String key) {
+    String unifiedKey = key.trim().toLowerCase();
+    if (lookupTable.containsKey(unifiedKey)) {
+      return lookupTable.get(unifiedKey);
     }
 
-    final String unifiedKey = key.trim().toLowerCase();
-    if (!lookupTable.containsKey(unifiedKey)) {
-      return null;
-    }
-
-    return lookupTable.get(unifiedKey);
-  }
-
-  public static Faction lookupById(final byte id) {
-    if (id <= 0) {
-      return null;
-    }
-
-    if (!lookupTableById.containsKey(id)) {
-      return null;
-    }
-
-    return lookupTableById.get(id);
+    return NO_FACTION;
   }
 }

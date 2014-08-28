@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,22 +43,22 @@ public class AuctionHouseExportFile {
   @Transient
   private final Map<Integer, AuctionRecord> auctions;
 
-  private LocalDateTime snapshotTime;
+  private long snapshotTime;
   @Transient
   private File file;
 
   public AuctionHouseExportFile(String snapshotHash) {
     this.snapshotHash = snapshotHash;
     this.jsonFactory = new JsonFactory(new ObjectMapper());
-    snapshotTime = LocalDateTime.now();
+    snapshotTime = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
     records = new LinkedList<>();
     auctions = new HashMap<>();
   }
 
-  public synchronized AuctionHouseExportFile read() throws AuctionHouseExportException {
+  public synchronized AuctionHouseExportFile read(int fileId) throws AuctionHouseExportException {
     if (file != null && file.exists() && file.canRead() && file.isFile()) {
       try {
-        readBzipFile();
+        readBzipFile(fileId);
         return this;
       } catch (IOException e) {
         throw new AuctionHouseExportException(e);
@@ -66,7 +67,7 @@ public class AuctionHouseExportFile {
     throw new AuctionHouseExportException("Could not read export file [" + (file != null ? file.getAbsolutePath() : "no file") + "]");
   }
 
-  private void readBzipFile() throws IOException, AuctionHouseExportException {
+  private void readBzipFile(int fileId) throws IOException, AuctionHouseExportException {
     try (BZip2CompressorInputStream inputStream = new BZip2CompressorInputStream(new FileInputStream(file))) {
 
       try (JsonParser jp = jsonFactory.createParser(inputStream)) {
@@ -120,6 +121,9 @@ public class AuctionHouseExportFile {
         }
       }
     }
+
+    // Add end of file marker
+    records.add(new AuctionHouseExportRecord(this).auctionId(fileId).faction(Faction.END_OF_FILE));
   }
 
   private void fillRecord(AuctionHouseExportRecord record, Map<String, Object> recordData) {

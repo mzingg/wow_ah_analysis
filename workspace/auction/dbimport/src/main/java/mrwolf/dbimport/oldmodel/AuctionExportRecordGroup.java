@@ -37,7 +37,7 @@ public class AuctionExportRecordGroup {
   }
 
   public boolean isExpired(final long timePoint) {
-    long maxTime = latestRecord.originFile().snapshotTime().toEpochSecond(ZoneOffset.UTC) + latestRecord.timeLeft().getOffsetTime();
+    long maxTime = latestRecord.originFile().snapshotTime() + latestRecord.timeLeft().getOffsetTime();
     return timePoint > maxTime;
   }
 

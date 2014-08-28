@@ -8,10 +8,10 @@ import java.util.Map;
 
 public enum AuctionDuration {
 
-  VERY_LONG(172800000), // 48h
-  LONG(43200000), // 12h
-  MEDIUM(7200000), // 2h
-  SHORT(1800000); // 30m
+  VERY_LONG(1728000), // 48h
+  LONG(432000), // 12h
+  MEDIUM(72000), // 2h
+  SHORT(18000); // 30m
 
   @Getter
   private long offsetTime;

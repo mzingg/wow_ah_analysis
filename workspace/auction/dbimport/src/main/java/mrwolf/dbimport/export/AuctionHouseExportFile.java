@@ -32,7 +32,7 @@ import java.util.Map;
 @Accessors(fluent = true)
 @EqualsAndHashCode(of = "snapshotHash")
 @ToString
-public class AuctionHouseExportFile {
+public class AuctionHouseExportFile implements Comparable<AuctionHouseExportFile> {
   @Id
   @NonNull
   private final String snapshotHash;
@@ -205,4 +205,12 @@ public class AuctionHouseExportFile {
     }
   }
 
+  @Override
+  public int compareTo(AuctionHouseExportFile other) {
+    if (other == null) {
+      return 0;
+    }
+
+    return file.getName().compareTo(other.file.getName());
+  }
 }

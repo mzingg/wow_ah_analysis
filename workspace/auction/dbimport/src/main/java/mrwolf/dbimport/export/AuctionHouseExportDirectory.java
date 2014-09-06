@@ -14,9 +14,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,7 +30,7 @@ public class AuctionHouseExportDirectory {
   @Transient
   @NonNull
   private final File inputDirectory;
-  private final List<AuctionHouseExportFile> fileList;
+  private final Set<AuctionHouseExportFile> fileSet;
   @Id
   @Getter
   @Setter
@@ -40,12 +38,12 @@ public class AuctionHouseExportDirectory {
 
   public AuctionHouseExportDirectory(String path) throws AuctionHouseExportException {
     this.inputDirectory = checkInputDirectory(path);
-    this.fileList = new LinkedList<>();
-    readDirectoryRecursivly(this.fileList, this.inputDirectory);
+    this.fileSet = new TreeSet<>();
+    readDirectoryRecursivly(this.fileSet, this.inputDirectory);
   }
 
   public List<AuctionHouseExportFile> fileList() {
-    return Collections.unmodifiableList(fileList);
+    return new LinkedList<>(fileSet);
   }
 
   private File checkInputDirectory(String path) throws AuctionHouseExportException {
@@ -56,7 +54,7 @@ public class AuctionHouseExportDirectory {
     throw new AuctionHouseExportException("Could not read input directory [" + path + "]");
   }
 
-  private void readDirectoryRecursivly(List<AuctionHouseExportFile> outputList, File parentDirectory) {
+  private void readDirectoryRecursivly(Set<AuctionHouseExportFile> outputList, File parentDirectory) {
     File[] listFiles = parentDirectory.listFiles();
     // lisFiles can be null, so we have to check this case (should however not occure at this point)
     if (listFiles == null) {

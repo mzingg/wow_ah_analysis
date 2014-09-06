@@ -25,8 +25,6 @@ public class FileReader implements Runnable {
   @Getter
   private int fileProcessed;
 
-  private boolean notDelivered;
-
   public FileReader(AuctionProcessDispatcher dispatcher, String directory) {
     this.dispatcher = dispatcher;
     this.directory = directory;
@@ -60,7 +58,7 @@ public class FileReader implements Runnable {
   }
 
   public boolean delivered() {
-    return processedFiles.size() > 0 || fileCount == fileProcessed;
+    return processedFiles.size() == 0 && fileCount == fileProcessed;
   }
 
   public void triggerFileEnd(int fileId) {

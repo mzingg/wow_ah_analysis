@@ -12,10 +12,7 @@ import mrwolf.dbimport.persistence.AuctionHouseExportFileRepository;
 import mrwolf.dbimport.persistence.AuctionRecordRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -24,46 +21,48 @@ import java.util.concurrent.Executors;
 public class AuctionProcessDispatcher {
 
   private static final int LOG_DELAY = 1000; // 1 second
-
+  @NonNull
+  private final String directory;
+  private final int persistorBatchSize;
+  private final Map<Integer, List<AuctionHouseExportRecord>> incomingById;
+  private final Queue<AuctionRecord> persist;
+  private final Queue<Exception> errors;
   @Autowired
   @Setter
   @Getter
   private AuctionRecordRepository auctionRepository;
-
   @Autowired
   @Setter
   @Getter
   private AuctionHouseExportFileRepository fileRepository;
-
-  @NonNull
-  private final String directory;
-  private final int persistorBatchSize;
-
-  private final Queue<AuctionHouseExportRecord> incoming;
-  private final Queue<AuctionRecord> persist;
-  private final Queue<Exception> errors;
   private FileReader fileReader;
 
   public AuctionProcessDispatcher(String directory, int persistorBatchSize) {
     this.directory = directory;
     this.persistorBatchSize = persistorBatchSize;
-    this.incoming = new LinkedList<>();
+    this.incomingById = new HashMap<>();
     this.persist = new LinkedList<>();
     this.errors = new LinkedList<>();
   }
 
   public void start() {
     int nThreads = Runtime.getRuntime().availableProcessors();
-    ExecutorService executor = Executors.newFixedThreadPool(nThreads);
+    if (nThreads < 4) {
+      log.error("Dispatcher can only run on a multi processor system.");
+      return;
+    }
 
+    ExecutorService executor = Executors.newFixedThreadPool(nThreads);
     fileReader = new FileReader(this, directory);
     executor.execute(fileReader);
 
-    for (int i = 1; i <= nThreads - 1; i++) {
+    for (int i = 1; i <= nThreads - 3; i++) {
       executor.execute(new AuctionStatisticCollector(this));
     }
 
-    executor.execute(new AuctionPersistor(this, persistorBatchSize));
+    for (int i = 1; i <= 2; i++) {
+      executor.execute(new AuctionPersistor(this, persistorBatchSize));
+    }
 
     executor.shutdown();
 
@@ -77,15 +76,18 @@ public class AuctionProcessDispatcher {
   }
 
   private void logStatus() {
-    log.info("File {}/{}", fileReader.fileProcessed(), fileReader.fileCount());
-    log.info("Incoming queue size: {}", incoming.size());
-    log.info("Persist queue size: {}", persist.size());
-    if (!errors.isEmpty()) {
-      synchronized (errors) {
-        for (Iterator<Exception> it = errors.iterator(); it.hasNext(); ) {
-          Exception exception = it.next();
-          log.error(exception.getLocalizedMessage(), exception);
-          it.remove();
+    int fileCount = fileReader.fileCount();
+    if (fileCount >= 0) {
+      log.info("File {}/{}", fileReader.fileProcessed(), fileCount);
+      log.info("Incoming queue size: {}", incomingById.size());
+      log.info("Persist queue size: {}", persist.size());
+      if (!errors.isEmpty()) {
+        synchronized (errors) {
+          for (Iterator<Exception> it = errors.iterator(); it.hasNext(); ) {
+            Exception exception = it.next();
+            log.error(exception.getLocalizedMessage(), exception);
+            it.remove();
+          }
         }
       }
     }
@@ -96,36 +98,38 @@ public class AuctionProcessDispatcher {
   }
 
   public boolean collectorsShouldTerminate() {
-    return fileReader != null && fileReader.delivered() && incoming.isEmpty();
+    return fileReader != null && fileReader.delivered() && incomingById.isEmpty();
   }
 
   /**
-   * Takes the first element of the incoming list queue and returns a list with all records with the same auctionId as this first element.
-   * Removes the elements from the incoming list.
+   * Takes the first element of the incomingById list queue and returns a list with all records with the same auctionId as this first element.
+   * Removes the elements from the incomingById list.
    *
    * @return List
    */
   public List<AuctionHouseExportRecord> popIncoming() {
     List<AuctionHouseExportRecord> result = new LinkedList<>();
-    synchronized (incoming) {
-      int auctionId = 0;
-      for (Iterator<AuctionHouseExportRecord> records = incoming.iterator(); records.hasNext(); ) {
-        AuctionHouseExportRecord record = records.next();
-        if (auctionId == 0) {
-          auctionId = record.auctionId();
-        }
-        if (record.auctionId() == auctionId) {
-          result.add(record);
-          records.remove();
-        }
+    synchronized (incomingById) {
+      try {
+        int auctionId = incomingById.keySet().iterator().next();
+        result.addAll(incomingById.remove(auctionId));
+      } catch (NoSuchElementException ignored) {
+        // empty list
       }
     }
+
     return result;
   }
 
   public void pushAsIncoming(List<AuctionHouseExportRecord> records) {
-    synchronized (incoming) {
-      incoming.addAll(records);
+    synchronized (incomingById) {
+      for (AuctionHouseExportRecord record : records) {
+        int auctionId = record.auctionId();
+        if (!incomingById.containsKey(auctionId)) {
+          incomingById.put(auctionId, new LinkedList<>());
+        }
+        incomingById.get(auctionId).add(record);
+      }
     }
   }
 
@@ -143,21 +147,22 @@ public class AuctionProcessDispatcher {
 
   public List<AuctionRecord> pollAuctions(int batchSize) {
     List<AuctionRecord> result = new LinkedList<>();
-    if (!persist.isEmpty()) {
+    for (int batchCounter = 1; batchCounter < batchSize; batchCounter++) {
+      AuctionRecord record = null;
       synchronized (persist) {
-        int batchCounter = 1;
-        for (Iterator<AuctionRecord> records = persist.iterator(); records.hasNext() && batchCounter < batchSize; ) {
-          AuctionRecord record = records.next();
-          if (record.faction().equals(Faction.END_OF_FILE)) {
-            fileReader.triggerFileEnd(record.auctionId());
-          } else {
-            result.add(record);
-          }
-          records.remove();
-          batchCounter++;
-        }
+        record = persist.poll();
+      }
+      if (record == null) {
+        break;
+      }
+
+      if (record.faction().equals(Faction.END_OF_FILE)) {
+        fileReader.triggerFileEnd(record.auctionId());
+      } else {
+        result.add(record);
       }
     }
+
     return result;
   }
 }

@@ -29,6 +29,7 @@ public class AuctionRecord {
 
   @Id
   private int auctionId;
+  @Indexed
   private String realm;
   @Indexed
   private Faction faction;
@@ -42,10 +43,7 @@ public class AuctionRecord {
   private int petQualityId;
   private long lastOccurence;
   private AuctionDuration lastDuration;
-  private int year;
-  private int month;
-  private int day;
-  private int hour;
+  @Indexed
   private AuctionStatus status;
 
   @Transient
@@ -71,7 +69,6 @@ public class AuctionRecord {
     lastOccurence = record.originFile().snapshotTime();
     lastDuration = record.timeLeft();
 
-    updateDateDependentFields();
     updateStatusFlag();
     BidHistoryEntry entry = new BidHistoryEntry(record.bidAmount(), lastOccurence, lastDuration);
     if (!bidHistoryUniqueTracker.containsKey(entry.key())) {
@@ -163,14 +160,6 @@ public class AuctionRecord {
     this.petQualityId = record.petQualityId();
     this.petLevel = record.petLevel();
     this.buyoutAmount = record.buyoutAmount();
-  }
-
-  private void updateDateDependentFields() {
-    LocalDateTime cal = LocalDateTime.ofEpochSecond(lastOccurence() + lastDuration().getOffsetTime(), 0, ZoneOffset.UTC);
-    this.year = cal.getYear();
-    this.month = cal.getMonthValue();
-    this.day = cal.getDayOfMonth();
-    this.hour = cal.getHour();
   }
 
   private void updateStatusFlag() {

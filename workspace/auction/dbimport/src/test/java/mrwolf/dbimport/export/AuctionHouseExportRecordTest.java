@@ -32,7 +32,7 @@ public class AuctionHouseExportRecordTest {
     expected.put("petBreedId", 0);
     expected.put("petLevel", 0);
     expected.put("petQualityId", 0);
-    assertRecord(actual.get(0), 74518, 0, expected);
+    assertRecord(actual.get(0), 74519, 0, expected);
 
     expected.put("realm", "thrall");
     expected.put("faction", Faction.HORDE);
@@ -46,7 +46,7 @@ public class AuctionHouseExportRecordTest {
     expected.put("petBreedId", 7);
     expected.put("petLevel", 1);
     expected.put("petQualityId", 3);
-    assertRecord(actual.get(5), 71088, 23616, expected);
+    assertRecord(actual.get(5), 71089, 23616, expected);
 
     expected.put("realm", "thrall");
     expected.put("faction", Faction.NEUTRAL);
@@ -60,7 +60,7 @@ public class AuctionHouseExportRecordTest {
     expected.put("petBreedId", 0);
     expected.put("petLevel", 0);
     expected.put("petQualityId", 0);
-    assertRecord(actual.get(9), 64444, 64443, expected);
+    assertRecord(actual.get(9), 64445, 64443, expected);
   }
 
   private void assertRecord(AuctionHouseExportFile testFile, int expectedRecordCount, int indexToTest, Map<String, Object> expectedValues) throws AuctionHouseExportException {

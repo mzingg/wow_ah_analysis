@@ -55,6 +55,9 @@ public class AuctionProcessDispatcher {
       return;
     }
 
+    log.info("Start processing of directory " + directory);
+    log.info("Starting threads ... ");
+
     ExecutorService executor = Executors.newFixedThreadPool(nThreads);
     fileReader = new FileReader(this, directory);
     executor.execute(fileReader);

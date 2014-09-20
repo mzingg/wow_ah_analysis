@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.io.SerializedString;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mongodb.util.JSONParseException;
 import lombok.*;
 import lombok.experimental.Accessors;
 import mrwolf.dbimport.model.AuctionDuration;
@@ -119,6 +120,8 @@ public class AuctionHouseExportFile implements Comparable<AuctionHouseExportFile
           jp.nextToken();
 
         }
+      } catch (JSONParseException e) {
+        throw new AuctionHouseExportException("Invalid input format: " + file.getName());
       }
     }
 

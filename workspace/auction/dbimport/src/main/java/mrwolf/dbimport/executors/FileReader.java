@@ -47,21 +47,25 @@ public class FileReader implements Runnable {
           if (existingFiles.contains(file)) {
             continue;
           }
-          file.read(fileId);
-          for (AuctionHouseExportRecord record : file.records()) {
-            while (!dispatcher.pushIsAllowed()) {
-              try {
-                wait();
-              } catch (InterruptedException e) {
-                dispatcher.pushError(e);
+          try {
+            file.read(fileId);
+            for (AuctionHouseExportRecord record : file.records()) {
+              while (!dispatcher.pushIsAllowed()) {
+                try {
+                  wait();
+                } catch (InterruptedException e) {
+                  dispatcher.pushError(e);
+                }
+              }
+              dispatcher.pushAsIncoming(record);
+              synchronized (processedFiles) {
+                processedFiles.put(fileId, file);
               }
             }
-            dispatcher.pushAsIncoming(record);
-            synchronized (processedFiles) {
-              processedFiles.put(fileId, file);
-            }
+            fileId++;
+          } catch (AuctionHouseExportException e) {
+            dispatcher.pushError(e);
           }
-          fileId++;
         }
       }
     } catch (AuctionHouseExportException e) {

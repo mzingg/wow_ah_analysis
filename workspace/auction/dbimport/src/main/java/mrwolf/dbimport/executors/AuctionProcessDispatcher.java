@@ -21,12 +21,15 @@ import java.util.concurrent.Executors;
 public class AuctionProcessDispatcher {
 
   private static final int LOG_DELAY = 1000; // 1 second
+  private static final long INCOMING_THRESHHOLD = 100000;
+
   @NonNull
   private final String directory;
   private final int persistorBatchSize;
   private final Map<Integer, List<AuctionHouseExportRecord>> incomingById;
   private final Queue<AuctionRecord> persist;
   private final Queue<Exception> errors;
+  private long incomingCounter;
   @Autowired
   @Setter
   @Getter
@@ -56,13 +59,11 @@ public class AuctionProcessDispatcher {
     fileReader = new FileReader(this, directory);
     executor.execute(fileReader);
 
-    for (int i = 1; i <= nThreads - 3; i++) {
+    for (int i = 1; i <= nThreads - 2; i++) {
       executor.execute(new AuctionStatisticCollector(this));
     }
 
-    for (int i = 1; i <= 2; i++) {
-      executor.execute(new AuctionPersistor(this, persistorBatchSize));
-    }
+    executor.execute(new AuctionPersistor(this, persistorBatchSize));
 
     executor.shutdown();
 
@@ -79,7 +80,7 @@ public class AuctionProcessDispatcher {
     int fileCount = fileReader.fileCount();
     if (fileCount >= 0) {
       log.info("File {}/{}", fileReader.fileProcessed(), fileCount);
-      log.info("Incoming queue size: {}", incomingById.size());
+      log.info("Incoming queue size: {}", incomingCounter);
       log.info("Persist queue size: {}", persist.size());
       if (!errors.isEmpty()) {
         synchronized (errors) {
@@ -112,25 +113,33 @@ public class AuctionProcessDispatcher {
     synchronized (incomingById) {
       try {
         int auctionId = incomingById.keySet().iterator().next();
-        result.addAll(incomingById.remove(auctionId));
+        List<AuctionHouseExportRecord> removedList = incomingById.remove(auctionId);
+        result.addAll(removedList);
+        incomingCounter -= removedList.size();
       } catch (NoSuchElementException ignored) {
         // empty list
       }
+    }
+    synchronized (fileReader) {
+      fileReader.notify();
     }
 
     return result;
   }
 
-  public void pushAsIncoming(List<AuctionHouseExportRecord> records) {
+  public void pushAsIncoming(AuctionHouseExportRecord record) {
     synchronized (incomingById) {
-      for (AuctionHouseExportRecord record : records) {
-        int auctionId = record.auctionId();
-        if (!incomingById.containsKey(auctionId)) {
-          incomingById.put(auctionId, new LinkedList<>());
-        }
-        incomingById.get(auctionId).add(record);
+      int auctionId = record.auctionId();
+      if (!incomingById.containsKey(auctionId)) {
+        incomingById.put(auctionId, new LinkedList<>());
       }
+      incomingById.get(auctionId).add(record);
+      incomingCounter++;
     }
+  }
+
+  public boolean pushIsAllowed() {
+    return incomingCounter < INCOMING_THRESHHOLD;
   }
 
   public void pushToPersist(AuctionRecord record) {
@@ -148,7 +157,7 @@ public class AuctionProcessDispatcher {
   public List<AuctionRecord> pollAuctions(int batchSize) {
     List<AuctionRecord> result = new LinkedList<>();
     for (int batchCounter = 1; batchCounter < batchSize; batchCounter++) {
-      AuctionRecord record = null;
+      AuctionRecord record;
       synchronized (persist) {
         record = persist.poll();
       }

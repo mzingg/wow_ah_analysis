@@ -27,7 +27,6 @@
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="dbimport" target="1.8" />
-      <module name="meta" target="1.7" />
     </bytecodeTargetLevel>
   </component>
 </project>

@@ -6,11 +6,11 @@ import lombok.experimental.Accessors;
 import mrwolf.dbimport.export.AuctionHouseExportDirectory;
 import mrwolf.dbimport.export.AuctionHouseExportException;
 import mrwolf.dbimport.export.AuctionHouseExportFile;
+import mrwolf.dbimport.export.AuctionHouseExportRecord;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @Accessors(fluent = true)
 public class FileReader implements Runnable {
@@ -42,16 +42,27 @@ public class FileReader implements Runnable {
       List<AuctionHouseExportFile> files = exportDirectory.fileList();
       fileCount = files.size() - existingFiles.size();
       int fileId = 1;
-      for (AuctionHouseExportFile file : files) {
-        if (existingFiles.contains(file)) {
-          continue;
+      synchronized (this) {
+        for (AuctionHouseExportFile file : files) {
+          if (existingFiles.contains(file)) {
+            continue;
+          }
+          file.read(fileId);
+          for (AuctionHouseExportRecord record : file.records()) {
+            while (!dispatcher.pushIsAllowed()) {
+              try {
+                wait();
+              } catch (InterruptedException e) {
+                dispatcher.pushError(e);
+              }
+            }
+            dispatcher.pushAsIncoming(record);
+            synchronized (processedFiles) {
+              processedFiles.put(fileId, file);
+            }
+          }
+          fileId++;
         }
-        file.read(fileId);
-        dispatcher.pushAsIncoming(file.records());
-        synchronized (processedFiles) {
-          processedFiles.put(fileId, file);
-        }
-        fileId++;
       }
     } catch (AuctionHouseExportException e) {
       dispatcher.pushError(e);

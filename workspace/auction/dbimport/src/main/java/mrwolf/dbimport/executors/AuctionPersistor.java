@@ -15,12 +15,10 @@ public class AuctionPersistor implements Runnable {
 
   @Override
   public void run() {
-    while (!dispatcher.persistorShouldTerminate()) {
-      try {
-        dispatcher.auctionRepository().save(dispatcher.pollAuctions(batchSize));
-      } catch (PersistenceException e) {
-        dispatcher.pushError(e);
-      }
+    while (!dispatcher.persistorShouldTerminate()) try {
+      dispatcher.auctionRepository().save(dispatcher.pollAuctions(batchSize));
+    } catch (PersistenceException e) {
+      dispatcher.pushError(e);
     }
   }
 

@@ -17,7 +17,6 @@ public class AuctionHouseExportRecord {
 
   private final long snapshotTime;
 
-  @NonNull
   private final long snapshotHash;
 
   private String id;

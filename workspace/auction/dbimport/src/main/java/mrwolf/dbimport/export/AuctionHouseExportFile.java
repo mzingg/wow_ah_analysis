@@ -30,7 +30,7 @@ import java.util.Map;
 @EqualsAndHashCode(of = "snapshotHash")
 @ToString
 public class AuctionHouseExportFile implements Comparable<AuctionHouseExportFile> {
-  @NonNull
+
   private final long snapshotHash;
   private final JsonFactory jsonFactory;
   private final List<AuctionHouseExportRecord> records;

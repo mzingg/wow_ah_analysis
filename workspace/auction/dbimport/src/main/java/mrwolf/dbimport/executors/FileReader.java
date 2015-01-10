@@ -51,7 +51,7 @@ public class FileReader implements Runnable {
           try {
             file.read(fileId);
             for (AuctionHouseExportRecord record : file.records()) {
-              while (!dispatcher.pushIsAllowed()) {
+              while (!dispatcher.pushToIncomingIsAllowed()) {
                 try {
                   wait();
                 } catch (InterruptedException e) {
@@ -62,6 +62,7 @@ public class FileReader implements Runnable {
               synchronized (processedFiles) {
                 processedFiles.put(fileId, file);
               }
+              notify();
             }
             fileId++;
           } catch (AuctionHouseExportException e) {

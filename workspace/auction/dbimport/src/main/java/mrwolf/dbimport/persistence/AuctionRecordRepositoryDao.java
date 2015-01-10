@@ -2,7 +2,9 @@ package mrwolf.dbimport.persistence;
 
 import mrwolf.dbimport.model.*;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -52,10 +54,11 @@ public class AuctionRecordRepositoryDao implements AuctionRecordRepository {
       return;
     }
 
+    DataSource dataSource = jdbcTemplate.getDataSource();
     Connection connection;
     try {
-        connection = jdbcTemplate.getDataSource().getConnection();
-    } catch (SQLException e) {
+      connection = DataSourceUtils.getConnection(dataSource);
+    } catch (CannotGetJdbcConnectionException e) {
       throw new PersistenceException(e);
     }
     try {
@@ -66,18 +69,18 @@ public class AuctionRecordRepositoryDao implements AuctionRecordRepository {
       );
       for (AuctionRecord record : auctionRecords) {
         auctionStatement.setInt(1, record.auctionId());
-        auctionStatement.setInt(2, record.itemId());
-        auctionStatement.setLong(3, record.buyoutAmount());
-        auctionStatement.setInt(4, record.quantity());
-        auctionStatement.setInt(5, record.petSpeciesId());
-        auctionStatement.setInt(6, record.petBreedId());
-        auctionStatement.setInt(7, record.petLevel());
-        auctionStatement.setInt(8, record.petQualityId());
-        auctionStatement.setByte(9, record.lastDuration().getDatabaseId());
-        auctionStatement.setByte(10, record.status().getDatabaseId());
-        auctionStatement.setLong(11, record.lastOccurence());
-        auctionStatement.setByte(12, record.faction().getDatabaseId());
-        auctionStatement.setString(13, record.realm());
+        auctionStatement.setString(2, record.realm());
+        auctionStatement.setByte(3, record.faction().getDatabaseId());
+        auctionStatement.setInt(4, record.itemId());
+        auctionStatement.setLong(5, record.buyoutAmount());
+        auctionStatement.setInt(6, record.quantity());
+        auctionStatement.setInt(7, record.petSpeciesId());
+        auctionStatement.setInt(8, record.petBreedId());
+        auctionStatement.setInt(9, record.petLevel());
+        auctionStatement.setInt(10, record.petQualityId());
+        auctionStatement.setByte(11, record.lastDuration().getDatabaseId());
+        auctionStatement.setByte(12, record.status().getDatabaseId());
+        auctionStatement.setLong(13, record.lastOccurence());
         auctionStatement.setInt(14, record.auctionId());
 
         auctionStatement.addBatch();
@@ -92,11 +95,11 @@ public class AuctionRecordRepositoryDao implements AuctionRecordRepository {
       );
       for (AuctionRecord record : auctionRecords) {
         for (BidHistoryEntry entry : record.getBidHistoryList()) {
-          historyStatement.setString(1, entry.key());
-          historyStatement.setInt(2, record.auctionId());
-          historyStatement.setLong(3, entry.amount());
-          historyStatement.setLong(4, entry.timestamp());
-          historyStatement.setByte(5, entry.duration().getDatabaseId());
+          historyStatement.setInt(1, record.auctionId());
+          historyStatement.setLong(2, entry.amount());
+          historyStatement.setLong(3, entry.timestamp());
+          historyStatement.setByte(4, entry.duration().getDatabaseId());
+          historyStatement.setString(5, entry.key());
           historyStatement.setString(6, entry.key());
 
           historyStatement.addBatch();
@@ -115,10 +118,7 @@ public class AuctionRecordRepositoryDao implements AuctionRecordRepository {
       }
       throw new PersistenceException(e);
     } finally {
-      try {
-        connection.setAutoCommit(true);
-      } catch (SQLException ignored) {
-      }
+      DataSourceUtils.releaseConnection(connection, dataSource);
     }
   }
 }

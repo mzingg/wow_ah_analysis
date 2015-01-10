@@ -21,11 +21,12 @@ import java.util.concurrent.Executors;
 public class AuctionProcessDispatcher {
 
   private static final int LOG_DELAY = 1000; // 1 second
-  private static final long INCOMING_THRESHHOLD = 100000;
+  private static final long INCOMING_THRESHHOLD = 50000; // restrict to control the memory footprint of the application
+  private static final long PERSIST_THRESHHOLD = 50000; // restrict to control the memory footprint of the application
 
   @NonNull
   private final String directory;
-  private final int persistorBatchSize;
+  private final int persistorBatchSize; // depends on speed of target database
   private final Map<Integer, List<AuctionHouseExportRecord>> incomingById;
   private final Queue<AuctionRecord> persist;
   private final Queue<Exception> errors;
@@ -42,6 +43,7 @@ public class AuctionProcessDispatcher {
   private AuctionHouseExportFileRepository fileRepository;
 
   private final FileReader fileReader;
+  private final List<AuctionStatisticCollector> collectors;
 
   public AuctionProcessDispatcher(String directory, int persistorBatchSize) {
     this.directory = directory;
@@ -50,6 +52,7 @@ public class AuctionProcessDispatcher {
     this.persist = new LinkedList<>();
     this.errors = new LinkedList<>();
     fileReader = new FileReader(this, directory);
+    collectors = new ArrayList<>();
   }
 
   public void start() {
@@ -65,8 +68,11 @@ public class AuctionProcessDispatcher {
     ExecutorService executor = Executors.newFixedThreadPool(nThreads);
     executor.execute(fileReader);
 
-    for (int i = 1; i <= nThreads - 2; i++) {
-      executor.execute(new AuctionStatisticCollector(this));
+    collectors.clear();
+    for (int i = 1; i <= nThreads - 3; i++) {
+      AuctionStatisticCollector collector = new AuctionStatisticCollector(this);
+      collectors.add(collector);
+      executor.execute(collector);
     }
 
     executor.execute(new AuctionPersistor(this, persistorBatchSize));
@@ -126,6 +132,8 @@ public class AuctionProcessDispatcher {
         // empty list
       }
     }
+
+    // Wake up sleeping file reader to deliver new input if input buffer is available
     synchronized (fileReader) {
       fileReader.notify();
     }
@@ -144,10 +152,13 @@ public class AuctionProcessDispatcher {
     }
   }
 
-  public boolean pushIsAllowed() {
+  public boolean pushToIncomingIsAllowed() {
     return incomingCounter < INCOMING_THRESHHOLD;
   }
 
+  public boolean pushToPersistIsAllowed() {
+    return persist.size() < PERSIST_THRESHHOLD;
+  }
   public void pushToPersist(AuctionRecord record) {
     synchronized (persist) {
       persist.add(record);
@@ -161,9 +172,6 @@ public class AuctionProcessDispatcher {
   }
 
   public List<AuctionRecord> pollAuctions(int batchSize) {
-    if (persist.size() < 50000) {
-      return new LinkedList<>();
-    }
     List<AuctionRecord> result = new LinkedList<>();
     for (int batchCounter = 1; batchCounter < batchSize; batchCounter++) {
       AuctionRecord record;
@@ -181,6 +189,14 @@ public class AuctionProcessDispatcher {
       }
     }
 
+    // Wake up sleeping collectors in case threshold is ok again
+    for (AuctionStatisticCollector collector : collectors) {
+      synchronized (collector) {
+        collector.notify();
+      }
+    }
+
     return result;
   }
+
 }

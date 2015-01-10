@@ -18,6 +18,15 @@ public class AuctionStatisticCollector implements Runnable {
   @Override
   public void run() {
     while (!dispatcher.collectorsShouldTerminate()) {
+      synchronized (this) {
+        while (!dispatcher.pushToPersistIsAllowed()) {
+          try {
+            wait();
+          } catch (InterruptedException e) {
+            dispatcher.pushError(e);
+          }
+        }
+      }
       List<AuctionHouseExportRecord> records = dispatcher.popIncoming();
       if (records.size() > 0) {
         int auctionId = records.get(0).auctionId(); // all records have same auctionId

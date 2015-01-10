@@ -1,8 +1,12 @@
 package mrwolf.dbimport.persistence;
 
 import mrwolf.dbimport.export.AuctionHouseExportFile;
-import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface AuctionHouseExportFileRepository extends MongoRepository<AuctionHouseExportFile, String> {
+import java.util.List;
 
+public interface AuctionHouseExportFileRepository {
+
+  List<AuctionHouseExportFile> findAll() throws PersistenceException;
+
+  void save(AuctionHouseExportFile entity)  throws PersistenceException;
 }

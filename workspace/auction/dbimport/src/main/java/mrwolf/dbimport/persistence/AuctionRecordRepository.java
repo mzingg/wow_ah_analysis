@@ -1,14 +1,12 @@
 package mrwolf.dbimport.persistence;
 
 import mrwolf.dbimport.model.AuctionRecord;
-import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;
 
-public interface AuctionRecordRepository extends MongoRepository<AuctionRecord, String> {
+public interface AuctionRecordRepository {
 
-  public final static String COLLECTION_NAME = "auctions";
+  AuctionRecord findByAuctionId(int auctionId) throws PersistenceException;
 
-  AuctionRecord findByAuctionId(int auctionId);
-
+  void save(List<AuctionRecord> auctionRecords) throws PersistenceException;
 }

@@ -1,5 +1,7 @@
 package mrwolf.dbimport.executors;
 
+import mrwolf.dbimport.persistence.PersistenceException;
+
 public class AuctionPersistor implements Runnable {
 
   private AuctionProcessDispatcher dispatcher;
@@ -14,7 +16,11 @@ public class AuctionPersistor implements Runnable {
   @Override
   public void run() {
     while (!dispatcher.persistorShouldTerminate()) {
-      dispatcher.auctionRepository().save(dispatcher.pollAuctions(batchSize));
+      try {
+        dispatcher.auctionRepository().save(dispatcher.pollAuctions(batchSize));
+      } catch (PersistenceException e) {
+        dispatcher.pushError(e);
+      }
     }
   }
 

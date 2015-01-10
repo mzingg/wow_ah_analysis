@@ -1,39 +1,29 @@
 package mrwolf.dbimport.model;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.experimental.Accessors;
 import mrwolf.dbimport.export.AuctionHouseExportException;
 import mrwolf.dbimport.export.AuctionHouseExportRecord;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Transient;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-@Document
 @Getter
+@Setter
 @Accessors(fluent = true)
 public class AuctionRecord {
 
-  @Transient
-  private final Map<String, BidHistoryEntry> bidHistoryUniqueTracker;
-  private final List<BidHistoryEntry> bidHistory;
+  @Getter(AccessLevel.PRIVATE)
+  private final Map<String, BidHistoryEntry> bidHistory;
 
-  @Id
   private int auctionId;
-  @Indexed
   private String realm;
-  @Indexed
   private Faction faction;
-  @Indexed
   private int itemId;
   private long buyoutAmount;
   private int quantity;
@@ -43,18 +33,15 @@ public class AuctionRecord {
   private int petQualityId;
   private long lastOccurence;
   private AuctionDuration lastDuration;
-  @Indexed
   private AuctionStatus status;
 
-  @Transient
   private boolean initialized;
 
   public AuctionRecord() {
     this.realm = StringUtils.EMPTY;
     this.lastDuration = AuctionDuration.VERY_LONG;
     this.faction = Faction.NO_FACTION;
-    this.bidHistoryUniqueTracker = new LinkedHashMap<>();
-    this.bidHistory = new LinkedList<>();
+    this.bidHistory = new LinkedHashMap<>();
     this.initialized = false;
     this.status = AuctionStatus.ACTIVE;
   }
@@ -66,14 +53,26 @@ public class AuctionRecord {
       this.initialized = true;
     }
 
-    lastOccurence = record.originFile().snapshotTime();
+    lastOccurence = record.snapshotTime();
     lastDuration = record.timeLeft();
 
     updateStatusFlag();
-    BidHistoryEntry entry = new BidHistoryEntry(record.bidAmount(), lastOccurence, lastDuration);
-    if (!bidHistoryUniqueTracker.containsKey(entry.key())) {
-      bidHistoryUniqueTracker.put(entry.key(), entry);
-      bidHistory.add(entry);
+    update(new BidHistoryEntry(record.auctionId(), record.bidAmount(), lastOccurence, lastDuration));
+  }
+
+  public Collection<BidHistoryEntry> getBidHistoryList() {
+    return Collections.unmodifiableCollection(bidHistory.values());
+  }
+
+  public void update(BidHistoryEntry historyEntry) {
+    if (!bidHistory.containsKey(historyEntry.key())) {
+      bidHistory.put(historyEntry.key(), historyEntry);
+    }
+  }
+
+  public void update(List<BidHistoryEntry> historyEntries) {
+    for (BidHistoryEntry entry : historyEntries) {
+      update(entry);
     }
   }
 
@@ -128,15 +127,11 @@ public class AuctionRecord {
       throw new AuctionHouseExportException("Invalid bidAmount.");
     }
 
-    if (record.originFile() == null) {
-      throw new AuctionHouseExportException("Invalid originFile.");
-    }
-
-    if (StringUtils.isBlank(record.originFile().snapshotHash())) {
+    if (record.snapshotHash() < 0) {
       throw new AuctionHouseExportException("Invalid snapshotHash.");
     }
 
-    if (record.originFile().snapshotTime() <= 0) {
+    if (record.snapshotTime() <= 0) {
       throw new AuctionHouseExportException("Invalid snapshotTime.");
     }
 

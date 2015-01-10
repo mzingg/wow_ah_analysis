@@ -7,6 +7,7 @@ import mrwolf.dbimport.export.AuctionHouseExportDirectory;
 import mrwolf.dbimport.export.AuctionHouseExportException;
 import mrwolf.dbimport.export.AuctionHouseExportFile;
 import mrwolf.dbimport.export.AuctionHouseExportRecord;
+import mrwolf.dbimport.persistence.PersistenceException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -36,8 +37,8 @@ public class FileReader implements Runnable {
 
   @Override
   public void run() {
-    List<AuctionHouseExportFile> existingFiles = dispatcher.fileRepository().findAll();
     try {
+      List<AuctionHouseExportFile> existingFiles = dispatcher.fileRepository().findAll();
       AuctionHouseExportDirectory exportDirectory = new AuctionHouseExportDirectory(directory);
       List<AuctionHouseExportFile> files = exportDirectory.fileList();
       fileCount = files.size() - existingFiles.size();
@@ -68,7 +69,7 @@ public class FileReader implements Runnable {
           }
         }
       }
-    } catch (AuctionHouseExportException e) {
+    } catch (AuctionHouseExportException | PersistenceException e) {
       dispatcher.pushError(e);
     }
   }
@@ -83,8 +84,13 @@ public class FileReader implements Runnable {
       synchronized (processedFiles) {
         entity = processedFiles.remove(fileId);
       }
-      dispatcher.fileRepository().save(entity);
+      try {
+        dispatcher.fileRepository().save(entity);
+      } catch (PersistenceException e) {
+        dispatcher.pushError(e);
+      }
       fileProcessed++;
+      System.gc();
     }
   }
 

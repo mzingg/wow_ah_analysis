@@ -30,15 +30,18 @@ public class AuctionProcessDispatcher {
   private final Queue<AuctionRecord> persist;
   private final Queue<Exception> errors;
   private long incomingCounter;
+
   @Autowired
   @Setter
   @Getter
   private AuctionRecordRepository auctionRepository;
+
   @Autowired
   @Setter
   @Getter
   private AuctionHouseExportFileRepository fileRepository;
-  private FileReader fileReader;
+
+  private final FileReader fileReader;
 
   public AuctionProcessDispatcher(String directory, int persistorBatchSize) {
     this.directory = directory;
@@ -46,6 +49,7 @@ public class AuctionProcessDispatcher {
     this.incomingById = new HashMap<>();
     this.persist = new LinkedList<>();
     this.errors = new LinkedList<>();
+    fileReader = new FileReader(this, directory);
   }
 
   public void start() {
@@ -59,7 +63,6 @@ public class AuctionProcessDispatcher {
     log.info("Starting threads ... ");
 
     ExecutorService executor = Executors.newFixedThreadPool(nThreads);
-    fileReader = new FileReader(this, directory);
     executor.execute(fileReader);
 
     for (int i = 1; i <= nThreads - 2; i++) {
@@ -158,6 +161,9 @@ public class AuctionProcessDispatcher {
   }
 
   public List<AuctionRecord> pollAuctions(int batchSize) {
+    if (persist.size() < 50000) {
+      return new LinkedList<>();
+    }
     List<AuctionRecord> result = new LinkedList<>();
     for (int batchCounter = 1; batchCounter < batchSize; batchCounter++) {
       AuctionRecord record;

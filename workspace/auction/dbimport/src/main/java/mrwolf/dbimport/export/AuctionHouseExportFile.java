@@ -1,21 +1,18 @@
 package mrwolf.dbimport.export;
 
 import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.io.SerializedString;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mongodb.util.JSONParseException;
 import lombok.*;
 import lombok.experimental.Accessors;
 import mrwolf.dbimport.model.AuctionDuration;
 import mrwolf.dbimport.model.AuctionRecord;
 import mrwolf.dbimport.model.Faction;
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Transient;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,28 +24,22 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-@Document
 @Getter
 @Setter
 @Accessors(fluent = true)
 @EqualsAndHashCode(of = "snapshotHash")
 @ToString
 public class AuctionHouseExportFile implements Comparable<AuctionHouseExportFile> {
-  @Id
   @NonNull
-  private final String snapshotHash;
-  @Transient
+  private final long snapshotHash;
   private final JsonFactory jsonFactory;
-  @Transient
   private final List<AuctionHouseExportRecord> records;
-  @Transient
   private final Map<Integer, AuctionRecord> auctions;
 
   private long snapshotTime;
-  @Transient
   private File file;
 
-  public AuctionHouseExportFile(String snapshotHash) {
+  public AuctionHouseExportFile(long snapshotHash) {
     this.snapshotHash = snapshotHash;
     this.jsonFactory = new JsonFactory(new ObjectMapper());
     snapshotTime = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
@@ -106,7 +97,7 @@ public class AuctionHouseExportFile implements Comparable<AuctionHouseExportFile
             while (jp.nextToken() != JsonToken.END_ARRAY) {
               Map<String, Object> recordData = jp.readValueAs(new TypeReference<Map<String, Object>>() {
               });
-              AuctionHouseExportRecord record = new AuctionHouseExportRecord(this).faction(faction).realm((String) realmData.get("slug"));
+              AuctionHouseExportRecord record = new AuctionHouseExportRecord(snapshotTime, snapshotHash).faction(faction).realm((String) realmData.get("slug"));
               fillRecord(record, recordData);
               records.add(record);
               if (!auctions.containsKey(record.auctionId())) {
@@ -120,13 +111,13 @@ public class AuctionHouseExportFile implements Comparable<AuctionHouseExportFile
           jp.nextToken();
 
         }
-      } catch (JSONParseException e) {
+      } catch (JsonParseException e) {
         throw new AuctionHouseExportException("Invalid input format: " + file.getName());
       }
     }
 
     // Add end of file marker
-    records.add(new AuctionHouseExportRecord(this).auctionId(fileId).faction(Faction.END_OF_FILE));
+    records.add(new AuctionHouseExportRecord(snapshotTime, snapshotHash).auctionId(fileId).faction(Faction.END_OF_FILE));
   }
 
   private void fillRecord(AuctionHouseExportRecord record, Map<String, Object> recordData) {

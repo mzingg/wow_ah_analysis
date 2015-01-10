@@ -2,36 +2,30 @@ package mrwolf.dbimport.export;
 
 import lombok.*;
 import lombok.experimental.Accessors;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Transient;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FilenameFilter;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.*;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.CRC32;
 
 import static java.lang.Integer.parseInt;
 
-@Document
 @Accessors(fluent = true)
 @EqualsAndHashCode(exclude = "inputDirectory")
 @ToString
 public class AuctionHouseExportDirectory {
 
   private static final AuctionExportFilenameFilter AUCTION_EXPORT_FILENAME_FILTER = new AuctionExportFilenameFilter();
-  @Transient
   @NonNull
   private final File inputDirectory;
   private final Set<AuctionHouseExportFile> fileSet;
-  @Id
   @Getter
   @Setter
   private String id;
@@ -72,15 +66,19 @@ public class AuctionHouseExportDirectory {
     }
   }
 
-  private String hashOfFile(final File file) {
+  private long hashOfFile(final File file) {
+    /*
     String result = StringUtils.EMPTY;
     try (FileInputStream fileStream = new FileInputStream(file)) {
       result = DigestUtils.sha1Hex(fileStream);
     } catch (IOException e) {
       // fall through
     }
+    */
 
-    return result;
+    CRC32 checksum = new CRC32();
+    checksum.update(file.getAbsolutePath().getBytes());
+    return checksum.getValue();
   }
 
   @Getter

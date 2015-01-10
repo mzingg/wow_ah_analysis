@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component name="dataSourceStorage">
+  <data-source name="PostgreSQL - wowah@localhost" uuid="31cc070a-92bf-40e5-8ec2-323b81299506">
+    <database-info product="PostgreSQL" version="9.4.0" jdbc-version="4.0" driver-name="PostgreSQL Native Driver" driver-version="PostgreSQL 9.3 JDBC4 (build 1100)">
+      <identifier-quote-string>&quot;</identifier-quote-string>
+    </database-info>
+    <case-sensitivity plain-identifiers="lower" quoted-identifiers="exact"/>
+    <schema name="public" catalog="wowah"/>
+    <table name="auction_export_file" schema="public" catalog="wowah" type="TABLE">
+      <column name="snapshotHash" sqlType="int8" precision="19" scale="0" nullable="false" jdbcType="-5"/>
+      <column name="snapshotTime" sqlType="int8" precision="19" scale="0" nullable="false" jdbcType="-5"/>
+      <primary-key name="auction_export_file_pkey" columns="snapshotHash"/>
+    </table>
+    <table name="auction_record" schema="public" catalog="wowah" type="TABLE">
+      <column name="auctionId" sqlType="int4" precision="10" scale="0" nullable="false" jdbcType="4"/>
+      <column name="realm" sqlType="varchar" precision="50" scale="0" nullable="false" jdbcType="12"/>
+      <column name="faction" sqlType="int2" precision="5" scale="0" nullable="false" jdbcType="5"/>
+      <column name="itemId" sqlType="int4" precision="10" scale="0" nullable="false" jdbcType="4"/>
+      <column name="buyoutAmount" sqlType="int8" precision="19" scale="0" nullable="false" jdbcType="-5"/>
+      <column name="quantity" sqlType="int4" precision="10" scale="0" nullable="false" jdbcType="4"/>
+      <column name="petSpeciesId" sqlType="int4" precision="10" scale="0" nullable="true" jdbcType="4"/>
+      <column name="petBreedId" sqlType="int4" precision="10" scale="0" nullable="true" jdbcType="4"/>
+      <column name="petLevel" sqlType="int4" precision="10" scale="0" nullable="true" jdbcType="4"/>
+      <column name="petQualityId" sqlType="int4" precision="10" scale="0" nullable="true" jdbcType="4"/>
+      <column name="lastDuration" sqlType="int2" precision="5" scale="0" nullable="false" jdbcType="5"/>
+      <column name="status" sqlType="int2" precision="5" scale="0" nullable="false" jdbcType="5"/>
+      <column name="lastOccurence" sqlType="int8" precision="19" scale="0" nullable="false" jdbcType="-5"/>
+      <primary-key name="auction_record_pkey" columns="auctionId"/>
+      <exported-key name="bid_history_auctionId_fkey" table="bid_history" schema="public" catalog="wowah" columns="auctionId"/>
+    </table>
+    <table name="bid_history" schema="public" catalog="wowah" type="TABLE">
+      <column name="auctionId" sqlType="int4" precision="10" scale="0" nullable="false" jdbcType="4"/>
+      <column name="amount" sqlType="int8" precision="19" scale="0" nullable="false" jdbcType="-5"/>
+      <column name="timestamp" sqlType="int8" precision="19" scale="0" nullable="false" jdbcType="-5"/>
+      <column name="duration" sqlType="int2" precision="5" scale="0" nullable="true" jdbcType="5"/>
+      <column name="key" sqlType="bpchar" precision="40" scale="0" nullable="false" jdbcType="1"/>
+      <primary-key name="bid_history_pkey" columns="key"/>
+      <foreign-key name="bid_history_auctionId_fkey" columns="auctionId" ref-table="auction_record" ref-schema="public" ref-catalog="" ref-columns="auctionId" update-rule="3" delete-rule="3" deferrability="2"/>
+      <index name="bid_history_auctionId_idx" unique="false" columns="auctionId"/>
+    </table>
+  </data-source>
+</component>

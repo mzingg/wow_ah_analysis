@@ -6,7 +6,6 @@ import java.util.List;
 
 import static mrwolf.TestUtil.aTestPath;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 public class AuctionHouseExportDirectoryTest {
 

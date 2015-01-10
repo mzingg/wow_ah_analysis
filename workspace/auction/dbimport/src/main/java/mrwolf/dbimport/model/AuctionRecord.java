@@ -71,9 +71,7 @@ public class AuctionRecord {
   }
 
   public void update(List<BidHistoryEntry> historyEntries) {
-    for (BidHistoryEntry entry : historyEntries) {
-      update(entry);
-    }
+    historyEntries.forEach(this::update);
   }
 
   private void validate(AuctionHouseExportRecord record, boolean compareMetaData) throws AuctionHouseExportException {

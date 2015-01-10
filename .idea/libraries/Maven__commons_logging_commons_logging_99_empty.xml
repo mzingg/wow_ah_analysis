@@ -1,8 +1,6 @@
 <component name="libraryTable">
   <library name="Maven: commons-logging:commons-logging:99-empty">
-    <CLASSES>
-      <root url="jar://$USER_HOME$/.m2/repository/commons-logging/commons-logging/99-empty/commons-logging-99-empty.jar!/" />
-    </CLASSES>
+    <CLASSES />
     <JAVADOC>
       <root url="jar://$USER_HOME$/.m2/repository/commons-logging/commons-logging/99-empty/commons-logging-99-empty-javadoc.jar!/" />
     </JAVADOC>

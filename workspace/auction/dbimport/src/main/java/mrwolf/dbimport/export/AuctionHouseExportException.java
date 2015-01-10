@@ -1,7 +1,5 @@
 package mrwolf.dbimport.export;
 
-import java.io.IOException;
-
 public class AuctionHouseExportException extends Exception {
 
   public AuctionHouseExportException(String message) {

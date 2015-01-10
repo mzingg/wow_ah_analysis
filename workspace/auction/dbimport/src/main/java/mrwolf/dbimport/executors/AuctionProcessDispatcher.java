@@ -191,6 +191,8 @@ public class AuctionProcessDispatcher {
 
     // Wake up sleeping collectors in case threshold is ok again
     for (AuctionStatisticCollector collector : collectors) {
+      // References a thread object
+      //noinspection SynchronizationOnLocalVariableOrMethodParameter
       synchronized (collector) {
         collector.notify();
       }

@@ -56,7 +56,6 @@ public class AuctionRecord {
     lastOccurence = record.snapshotTime();
     lastDuration = record.timeLeft();
 
-    updateStatusFlag();
     update(new BidHistoryEntry(record.auctionId(), record.bidAmount(), lastOccurence, lastDuration));
   }
 
@@ -68,6 +67,7 @@ public class AuctionRecord {
     if (!bidHistory.containsKey(historyEntry.key())) {
       bidHistory.put(historyEntry.key(), historyEntry);
     }
+    updateStatusFlag();
   }
 
   public void update(List<BidHistoryEntry> historyEntries) {
@@ -158,7 +158,8 @@ public class AuctionRecord {
   private void updateStatusFlag() {
     if (isExpired(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC))) {
       this.status = AuctionStatus.EXPIRED;
-    } else if (!AuctionDuration.SHORT.equals(lastDuration)) {
+    }
+    if (AuctionStatus.EXPIRED.equals(status) && (!AuctionDuration.SHORT.equals(lastDuration) || AuctionDuration.SHORT.equals(lastDuration) && bidHistory.size() > 1)) {
       this.status = AuctionStatus.PROBABLY_SOLD;
     }
     // ACTIVE is the default in the Ctor

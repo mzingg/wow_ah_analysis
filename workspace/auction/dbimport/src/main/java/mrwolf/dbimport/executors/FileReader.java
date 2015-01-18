@@ -61,6 +61,8 @@ public class FileReader implements Runnable {
               dispatcher.pushAsIncoming(record);
               synchronized (processedFiles) {
                 processedFiles.put(fileId, file);
+                // Dereference all not needed objects to control memory consumption with alot of files in the map
+                file.clearTransientData();
               }
               notify();
             }
@@ -91,7 +93,6 @@ public class FileReader implements Runnable {
         dispatcher.pushError(e);
       }
       fileProcessed++;
-      System.gc();
     }
   }
 

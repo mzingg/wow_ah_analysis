@@ -32,19 +32,27 @@ import java.util.Map;
 public class AuctionHouseExportFile implements Comparable<AuctionHouseExportFile> {
 
   private final long snapshotHash;
-  private final JsonFactory jsonFactory;
-  private final List<AuctionHouseExportRecord> records;
-  private final Map<Integer, AuctionRecord> auctions;
-
   private long snapshotTime;
-  private File file;
+
+  private transient JsonFactory jsonFactory;
+  private transient List<AuctionHouseExportRecord> records;
+  private transient Map<Integer, AuctionRecord> auctions;
+
+  private transient File file;
 
   public AuctionHouseExportFile(long snapshotHash) {
     this.snapshotHash = snapshotHash;
-    this.jsonFactory = new JsonFactory(new ObjectMapper());
     snapshotTime = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
+    this.jsonFactory = new JsonFactory(new ObjectMapper());
     records = new LinkedList<>();
     auctions = new HashMap<>();
+  }
+
+  public void clearTransientData() {
+    records = null;
+    auctions = null;
+    jsonFactory = null;
+    file = null;
   }
 
   public synchronized AuctionHouseExportFile read(int fileId) throws AuctionHouseExportException {
